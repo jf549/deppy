@@ -27,3 +27,10 @@
 *.exe
 *.out
 *.app
+
+# LLVM intermediate files
+*.s
+*.bc
+
+# Built project
+build/
