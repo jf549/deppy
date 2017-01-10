@@ -20,18 +20,36 @@ namespace {
 
       for (auto &block : fun) {
         for (auto &inst : block) {
-          if (auto *op = dyn_cast<LoadInst>(&inst)) {
-            IRBuilder<> builder(op);
-            builder.SetInsertPoint(&block, ++builder.GetInsertPoint()); // Insert call after load
+          if (isa<LoadInst>(&inst) || isa<StoreInst>(&inst)) {
+            Constant *libFun; // Runtime library function to call on load/store
+            Value *args[2];
+            IRBuilder<> builder(&inst);
+            builder.SetInsertPoint(&block, ++builder.GetInsertPoint()); // Insert call after op
 
-            // Insert function declaration using the correct LLVM pointer type for op. "print" takes
-            // type void *.
-            Constant *logFunc = fun.getParent()->getOrInsertFunction(
-              "print", Type::getVoidTy(ctx), op->getPointerOperand()->getType(), NULL
-            );
+            if (auto *op = dyn_cast<LoadInst>(&inst)) {
+              // Insert function declaration using the correct LLVM pointer type for op. "print"
+              // takes type void *.
+              libFun = fun.getParent()->getOrInsertFunction(
+                "print", Type::getVoidTy(ctx), Type::getInt32Ty(ctx),
+                op->getPointerOperand()->getType(), NULL
+              );
 
-            Value* args[] = {op->getPointerOperand()};
-            builder.CreateCall(logFunc, args);
+              args[0] = ConstantInt::get(Type::getInt32Ty(ctx), 1); // isLoad == 1
+              args[1] = op->getPointerOperand();
+
+            } else if (auto *op = dyn_cast<StoreInst>(&inst)) {
+              libFun = fun.getParent()->getOrInsertFunction(
+                "print", Type::getVoidTy(ctx), Type::getInt32Ty(ctx),
+                op->getPointerOperand()->getType(), NULL
+              );
+
+              args[0] = ConstantInt::get(Type::getInt32Ty(ctx), 0); // isLoad == 0
+              args[1] = op->getPointerOperand();
+            } else {
+              continue;
+            }
+
+            builder.CreateCall(libFun, args);
           }
         }
       }

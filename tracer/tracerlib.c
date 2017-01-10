@@ -1,5 +1,5 @@
 #include <stdio.h>
 
-void print(void *addr) {
-  printf("address: %p\n", addr);
+void print(int isLoad, void *addr) {
+  printf("%s: %p\n", isLoad ? "Load" : "Store", addr);
 }
