@@ -52,7 +52,7 @@ uint64_t analyser::dynamicGcd(uint64_t low1, uint64_t low2, uint64_t high1, uint
   uint64_t length = high - low + 1;
   uint64_t delta = (dist1 - ((low - low1) % dist1)) % dist1;
 
-  if (gcd(dist1, dist2) % delta != 0) {
+  if (delta % gcd(dist1, dist2) != 0) {
     return 0;
   }
 
