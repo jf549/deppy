@@ -39,8 +39,8 @@ uint64_t gcd(uint64_t a, uint64_t b) {
   return a;
 }
 
-uint64_t analyser::dynamicGcd(uint64_t low1, uint64_t low2, uint64_t high1, uint64_t high2, uint64_t dist1,
-                    uint64_t dist2) {
+uint64_t analyser::dynamicGcd(uint64_t low1, uint64_t low2, uint64_t high1, uint64_t high2,
+                              uint64_t dist1, uint64_t dist2) {
   if (low2 < low1) {
     std::swap(low1, low2);
     std::swap(high1, high2);
