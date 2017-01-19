@@ -60,7 +60,7 @@ uint64_t analyser::dynamicGcd(uint64_t low1, uint64_t low2, uint64_t high1, uint
   uint64_t gcd = egcd(dist1, dist2, &x, &y);
   uint64_t lcm = (dist1 / gcd) * dist2; // gcd divides both, more efficient to divide only one.
   uint64_t offset = (dist2 * y * delta/gcd + lcm) % lcm;
-  uint64_t result = (lcm + length - (offset + 1)) / lcm;
+  uint64_t result = (length - (offset + 1) + lcm) / lcm;
 
   return std::max((uint64_t) 0, result);
 }
