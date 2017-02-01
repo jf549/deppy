@@ -3,8 +3,7 @@
 
 using namespace analyser;
 
-StrideDetector::StrideDetector(int pc, bool isWrite, uint64_t addr) :
-  s(State::start), pc(pc), isWrite(isWrite) {
+StrideDetector::StrideDetector(uint64_t addr) : s(State::start) {
   addAddress(addr);
 }
 
@@ -57,7 +56,7 @@ void StrideDetector::addAddress(uint64_t addr) {
 
 int main(void) {
   uint64_t a[] = {10, 14, 18, 14, 18, 22, 30, 18, 22, 26};
-  StrideDetector sd(0, false, a[0]);
+  StrideDetector sd(a[0]);
   for (int i = 1; i < 9; ++i) {
     sd.addAddress(a[i]);
   }
