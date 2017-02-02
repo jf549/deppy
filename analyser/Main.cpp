@@ -16,6 +16,7 @@ struct LoopEvent : public Event {
 };
 
 struct MemoryEvent : public Event {
+  MemoryEvent(unsigned int p, uint64_t a, bool w) : pc(p), addr(a), isWrite(w) {}
   unsigned int pc;
   uint64_t addr;
   bool isWrite;
@@ -39,15 +40,16 @@ struct Stride2 {
 };
 
 void sd3(Event *queue[], unsigned int len) {
+  // TODO would a hash map be better for these?
   std::map<uint64_t, Point> pendingPointTable, historyPointTable;
   std::map<unsigned int, Stride> pendingStrideTable, historyStrideTable;
-  std::stack<LoopInstance> loopStack;
   std::map<unsigned int, std::unique_ptr<StrideDetector>> detectors;
+  std::stack<LoopInstance> loopStack;
 
   for (int i = 0; i < len; ++i) {
     Event *e = queue[i];
 
-    if (LoopEvent *le = dynamic_cast<LoopEvent*>(e)) {
+    if (LoopEvent *le = dynamic_cast<LoopEvent *>(e)) {
       if (le->type == LoopEvent::Type::loopStart) {
         // 1: When a loop, L, starts, LoopInstance of L is pushed on LoopStack.
         loopStack.emplace();
@@ -68,7 +70,7 @@ void sd3(Event *queue[], unsigned int len) {
         // is killed by the parent of L (Section 4.6), this killed history is not propagated.
       }
 
-    } else if (MemoryEvent *me = dynamic_cast<MemoryEvent*>(e)) {
+    } else if (MemoryEvent *me = dynamic_cast<MemoryEvent *>(e)) {
       // 2: On a memory reference, R, of L’s i-th iteration, check the killed bit of R. If killed, report
       // a loop-independent dependence, and halt the following steps.
 
@@ -77,8 +79,15 @@ void sd3(Event *queue[], unsigned int len) {
 
       if (false) { // TODO check killed bit
         printf("Loop-independent dependence %llu", me->addr);
+
       } else {
-        detectors[me->pc]->addAddress(me->addr);
+        if (detectors.count(me->pc) == 1) {
+          detectors[me->pc]->addAddress(me->addr);
+        } else {
+          std::unique_ptr<StrideDetector> p(new StrideDetector(me->addr));
+          detectors[me->pc] = std::move(p);
+        }
+
       }
 
     } else {
@@ -88,6 +97,8 @@ void sd3(Event *queue[], unsigned int len) {
 }
 
 int main(void) {
-  Event *queue[4];
-  sd3(queue, 4);
+  Event *queue[1];
+  MemoryEvent me(42, 1234, true);
+  queue[0] = &me;
+  sd3(queue, 1);
 }
