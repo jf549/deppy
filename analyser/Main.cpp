@@ -87,7 +87,6 @@ void sd3(Event *queue[], unsigned int len) {
           std::unique_ptr<StrideDetector> p(new StrideDetector(me->addr));
           detectors[me->pc] = std::move(p);
         }
-
       }
 
     } else {
