@@ -30,7 +30,10 @@ namespace {
       // preheader, latch and exit blocks.
       for (auto loop : loopInfo) {
         // Check that the loop has been put in LoopSimplfy form
-        if (!loop->isLoopSimplifyForm()) { errs() << "Loop not in LoopSimplify form\n"; continue; }
+        if (!loop->isLoopSimplifyForm()) {
+          errs() << "Loop not in LoopSimplify form, skipping\n";
+          continue;
+        }
 
         // Insert a LoopEntry event into the preheader
         if (auto preheader = loop->getLoopPreheader()) {
