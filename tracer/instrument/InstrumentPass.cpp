@@ -13,16 +13,16 @@ namespace {
     static char ID;
     InstrumentPass() : FunctionPass(ID) {}
 
-    void getAnalysisUsage(AnalysisUsage &AU) const override {
-      // Require LoopInfoWrapperPass for getting loop info
+    void getAnalysisUsage(AnalysisUsage& AU) const override {
+      // Require LoopInfoWrapperPass so that LoopInfo is available to this pass
       AU.addRequired<LoopInfoWrapperPass>();
     }
 
-    virtual bool runOnFunction(Function &fun) override {
-      auto &ctx = fun.getContext();
-      auto &loopInfo = getAnalysis<LoopInfoWrapperPass>().getLoopInfo();
+    virtual bool runOnFunction(Function& fun) override {
+      auto& ctx = fun.getContext();
+      auto& loopInfo = getAnalysis<LoopInfoWrapperPass>().getLoopInfo();
       auto loopEventFun = fun.getParent()->
-        getOrInsertFunction("loopEvent", Type::getVoidTy(ctx), Type::getInt32Ty(ctx), NULL);
+        getOrInsertFunction("loopEvent", Type::getVoidTy(ctx), Type::getInt32Ty(ctx), nullptr);
       IRBuilder<> callBuilder(ctx);
 
       // For each loop in the function, we emit a loop event for each loop entry, iteration and
@@ -53,7 +53,7 @@ namespace {
 
         // Insert a LoopExit event into each exit block
         if (loop->hasDedicatedExits()) {
-          SmallVector<BasicBlock *, 1> exitBlocks;
+          SmallVector<BasicBlock*, 1> exitBlocks;
           loop->getUniqueExitBlocks(exitBlocks);
           for (auto exitBlock : exitBlocks) {
             callBuilder.SetInsertPoint(exitBlock, exitBlock->getFirstInsertionPt());
