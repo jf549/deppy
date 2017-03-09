@@ -6,6 +6,8 @@
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/Support/raw_ostream.h"
 
+#include <stack>
+
 using namespace llvm;
 
 namespace {
@@ -18,17 +20,31 @@ namespace {
       AU.addRequired<LoopInfoWrapperPass>();
     }
 
-    virtual bool runOnFunction(Function& fun) override {
+    // For each loop in the function, we emit a loop event for each loop entry, iteration and
+    // exit. This is achieved by inserting a function call to our dynamic library into the loop's
+    // preheader, latch and exit blocks.
+    void instrumentLoops(Function& fun) {
       auto& ctx = fun.getContext();
       auto& loopInfo = getAnalysis<LoopInfoWrapperPass>().getLoopInfo();
       auto loopEventFun = fun.getParent()->
         getOrInsertFunction("loopEvent", Type::getVoidTy(ctx), Type::getInt32Ty(ctx), nullptr);
       IRBuilder<> callBuilder(ctx);
+      std::stack<Loop*> loopStack;
 
-      // For each loop in the function, we emit a loop event for each loop entry, iteration and
-      // exit. This is achieved by inserting a function call to our dynamic library into the loop's
-      // preheader, latch and exit blocks.
+      // Push top level loops onto the stack
       for (auto loop : loopInfo) {
+        loopStack.push(loop);
+      }
+
+      while (!loopStack.empty()) {
+        auto loop = loopStack.top();
+        loopStack.pop();
+
+        // Push subloops onto the stack
+        for (auto subloop : *loop) {
+          loopStack.push(subloop);
+        }
+
         // Check that the loop has been put in LoopSimplfy form
         if (!loop->isLoopSimplifyForm()) {
           errs() << "Loop not in LoopSimplify form, skipping\n";
@@ -63,6 +79,11 @@ namespace {
            errs() << "Loop must have dedicated exits (put in LoopSimplify form)\n";
         }
       }
+    }
+
+    virtual bool runOnFunction(Function& fun) override {
+      //auto& ctx = fun.getContext();
+      instrumentLoops(fun);
 
       // Next we perform a peephole analysis over each instruction in the function. For every load
       // or store instruction, we insert a function call to our dynamic library. The function is
