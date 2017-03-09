@@ -128,8 +128,8 @@ namespace {
     }
 
     virtual bool runOnFunction(Function& fun) override {
-      instrumentLoopEvents(fun);
       instrumentMemoryEvents(fun);
+      instrumentLoopEvents(fun);
 
       return true; // We have modified the function
     }
