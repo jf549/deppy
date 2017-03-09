@@ -25,7 +25,7 @@ namespace {
     // preheader, latch and exit blocks.
     void instrumentLoops(Function& fun) {
       auto& ctx = fun.getContext();
-      auto& loopInfo = getAnalysis<LoopInfoWrapperPass>().getLoopInfo();
+      const auto& loopInfo = getAnalysis<LoopInfoWrapperPass>().getLoopInfo();
       auto loopEventFun = fun.getParent()->
         getOrInsertFunction("loopEvent", Type::getVoidTy(ctx), Type::getInt32Ty(ctx), nullptr);
       IRBuilder<> callBuilder(ctx);
