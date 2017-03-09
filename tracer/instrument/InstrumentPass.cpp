@@ -88,38 +88,37 @@ namespace {
       // or store instruction, we insert a function call to our dynamic library. The function is
       // provided with (1) whether the memory instruction is a store or load, (2) the address
       // accessed and (3) the line number of the instruction in the IR.
-      for (auto &block : fun) {
-        for (auto &inst : block) {
-          if (isa<LoadInst>(&inst) || isa<StoreInst>(&inst)) {
-            Constant *libFun; // Runtime library function to call on load/store
-            Value *args[2];
+      for (auto& block : fun) {
+        for (auto& inst : block) {
+          if (isa<LoadInst>(inst) || isa<StoreInst>(inst)) {
+            Constant* libFun; // Runtime library function to call on load/store
+            Value* args[2];
             IRBuilder<> builder(&inst);
             builder.SetInsertPoint(&block, ++builder.GetInsertPoint()); // Insert call after op
 
-            if (auto *op = dyn_cast<LoadInst>(&inst)) {
+            if (auto loadInst = dyn_cast<LoadInst>(&inst)) {
               // Insert function declaration using the correct LLVM pointer type for op. "print"
               // takes type void *.
               libFun = fun.getParent()->getOrInsertFunction(
                 "print", Type::getVoidTy(ctx), Type::getInt32Ty(ctx),
-                op->getPointerOperand()->getType(), nullptr
+                loadInst->getPointerOperand()->getType(), nullptr
               );
 
               // TODO have two functions for load and store??
               args[0] = ConstantInt::get(Type::getInt32Ty(ctx), 1); // isLoad == 1
-              args[1] = op->getPointerOperand();
+              args[1] = loadInst->getPointerOperand();
               // TODO line number
 
-            } else if (auto *op = dyn_cast<StoreInst>(&inst)) {
+            } else {
+              auto storeInst = cast<StoreInst>(&inst);
               libFun = fun.getParent()->getOrInsertFunction(
                 "print", Type::getVoidTy(ctx), Type::getInt32Ty(ctx),
-                op->getPointerOperand()->getType(), nullptr
+                storeInst->getPointerOperand()->getType(), nullptr
               );
 
               args[0] = ConstantInt::get(Type::getInt32Ty(ctx), 0); // isLoad == 0
-              args[1] = op->getPointerOperand();
+              args[1] = storeInst->getPointerOperand();
               // TODO line number
-            } else {
-              continue;
             }
 
             builder.CreateCall(libFun, args);
