@@ -53,8 +53,8 @@ namespace {
 
         // Insert a LoopEntry event into the preheader
         if (auto preheader = loop->getLoopPreheader()) {
-          callBuilder.SetInsertPoint(preheader, preheader->getFirstInsertionPt()); // TODO need to insert into last position, not first
-          callBuilder.CreateCall(loopEventFun, ConstantInt::get(Type::getInt32Ty(ctx), 0)); // TODO put into template fun
+          callBuilder.SetInsertPoint(preheader->getTerminator());
+          callBuilder.CreateCall(loopEventFun, ConstantInt::get(Type::getInt32Ty(ctx), 0));
         } else {
           errs() << "Failed to get preheader\n";
         }
@@ -69,7 +69,7 @@ namespace {
 
         // Insert a LoopExit event into each exit block
         if (loop->hasDedicatedExits()) {
-          SmallVector<BasicBlock*, 1> exitBlocks;
+          SmallVector<BasicBlock*, 1> exitBlocks; // TODO tune this
           loop->getUniqueExitBlocks(exitBlocks);
           for (auto exitBlock : exitBlocks) {
             callBuilder.SetInsertPoint(exitBlock, exitBlock->getFirstInsertionPt());
