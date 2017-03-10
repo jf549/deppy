@@ -8,6 +8,12 @@
 
 #include <stack>
 
+#define LOOP_ENTRY 0
+#define LOOP_ITER 1
+#define LOOP_EXIT 2
+#define LOAD 0
+#define STORE 1
+
 using namespace llvm;
 
 namespace {
@@ -54,7 +60,7 @@ namespace {
         // Insert a LoopEntry event into the preheader
         if (auto preheader = loop->getLoopPreheader()) {
           callBuilder.SetInsertPoint(preheader->getTerminator());
-          callBuilder.CreateCall(loopEventFun, ConstantInt::get(Type::getInt32Ty(ctx), 0));
+          callBuilder.CreateCall(loopEventFun, ConstantInt::get(Type::getInt32Ty(ctx), LOOP_ENTRY));
         } else {
           errs() << "Failed to get preheader\n";
         }
@@ -62,7 +68,7 @@ namespace {
         // Insert a LoopIter event into the latch
         if (auto latch = loop->getLoopLatch()) {
           callBuilder.SetInsertPoint(latch, latch->getFirstInsertionPt());
-          callBuilder.CreateCall(loopEventFun, ConstantInt::get(Type::getInt32Ty(ctx), 1));
+          callBuilder.CreateCall(loopEventFun, ConstantInt::get(Type::getInt32Ty(ctx), LOOP_ITER));
         } else {
           errs() << "Failed to get loop latch\n";
         }
@@ -73,7 +79,7 @@ namespace {
           loop->getUniqueExitBlocks(exitBlocks);
           for (auto exitBlock : exitBlocks) {
             callBuilder.SetInsertPoint(exitBlock, exitBlock->getFirstInsertionPt());
-            callBuilder.CreateCall(loopEventFun, ConstantInt::get(Type::getInt32Ty(ctx), 2));
+            callBuilder.CreateCall(loopEventFun, ConstantInt::get(Type::getInt32Ty(ctx), LOOP_EXIT));
           }
         } else {
            errs() << "Loop must have dedicated exits (put in LoopSimplify form)\n";
@@ -81,18 +87,18 @@ namespace {
       }
     }
 
+    // Next we perform a peephole analysis over each instruction in the function. For every load
+    // or store instruction, we insert a function call to our dynamic library. The function is
+    // provided with (1) whether the memory instruction is a store or load, (2) the address
+    // accessed and (3) the line number of the instruction in the IR.
     void instrumentMemoryEvents(Function& fun) const {
       auto& ctx = fun.getContext();
 
-      // Next we perform a peephole analysis over each instruction in the function. For every load
-      // or store instruction, we insert a function call to our dynamic library. The function is
-      // provided with (1) whether the memory instruction is a store or load, (2) the address
-      // accessed and (3) the line number of the instruction in the IR.
       for (auto& block : fun) {
         for (auto& inst : block) {
           if (isa<LoadInst>(inst) || isa<StoreInst>(inst)) {
             Constant* libFun; // Runtime library function to call on load/store
-            Value* args[2];
+            Value* args[3]; // TODO use SmallVector?
             IRBuilder<> builder(&inst);
             builder.SetInsertPoint(&block, ++builder.GetInsertPoint()); // Insert call after op
 
@@ -100,25 +106,24 @@ namespace {
               // Insert function declaration using the correct LLVM pointer type for op. "print"
               // takes type void *.
               libFun = fun.getParent()->getOrInsertFunction(
-                "print", Type::getVoidTy(ctx), Type::getInt32Ty(ctx),
-                loadInst->getPointerOperand()->getType(), nullptr
+                "memoryEvent", Type::getVoidTy(ctx), Type::getInt32Ty(ctx),
+                loadInst->getPointerOperand()->getType(), Type::getInt32Ty(ctx), nullptr
               );
 
-              // TODO have two functions for load and store??
-              args[0] = ConstantInt::get(Type::getInt32Ty(ctx), 1); // isLoad == 1
+              args[0] = ConstantInt::get(Type::getInt32Ty(ctx), LOAD);
               args[1] = loadInst->getPointerOperand();
-              // TODO line number
+              args[2] = ConstantInt::get(Type::getInt32Ty(ctx), 0);
 
             } else {
               auto storeInst = cast<StoreInst>(&inst);
               libFun = fun.getParent()->getOrInsertFunction(
-                "print", Type::getVoidTy(ctx), Type::getInt32Ty(ctx),
-                storeInst->getPointerOperand()->getType(), nullptr
+                "memoryEvent", Type::getVoidTy(ctx), Type::getInt32Ty(ctx),
+                storeInst->getPointerOperand()->getType(), Type::getInt32Ty(ctx), nullptr
               );
 
-              args[0] = ConstantInt::get(Type::getInt32Ty(ctx), 0); // isLoad == 0
+              args[0] = ConstantInt::get(Type::getInt32Ty(ctx), STORE);
               args[1] = storeInst->getPointerOperand();
-              // TODO line number
+              args[2] = ConstantInt::get(Type::getInt32Ty(ctx), 0);
             }
 
             builder.CreateCall(libFun, args);
