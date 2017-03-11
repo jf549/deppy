@@ -7,9 +7,8 @@
 #define LOAD 0
 #define STORE 1
 
-void print(int isLoad, void *addr) {
-  printf("%s: %p\n", isLoad ? "Load" : "Store", addr);
-}
+void loopEvent(int type);
+void memoryEvent(int type, void *addr, uint64_t pc);
 
 void loopEvent(int type) {
   switch (type) {
