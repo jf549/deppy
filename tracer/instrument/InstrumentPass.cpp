@@ -88,17 +88,13 @@ namespace {
     }
 
     template<typename InstT>
-    void insertCall(Function& fn, InstT* inst) const {
-      auto& ctx = fn.getContext();
-      // Runtime library function to call on load/store
-      auto memoryEventFn = fn.getParent()->getOrInsertFunction("memoryEvent", Type::getVoidTy(ctx),
-        Type::getInt32Ty(ctx), Type::getInt8PtrTy(ctx), Type::getInt64Ty(ctx), nullptr);
+    void insertCall(LLVMContext& ctx, InstT* inst, Constant* fnToCall) const {
       IRBuilder<> builder(inst); // Insert function call before instruction
       Value* args[3]; // TODO use SmallVector?
       args[0] = ConstantInt::get(Type::getInt32Ty(ctx), std::is_same<InstT, LoadInst>::value ? LOAD : STORE);
       args[1] = builder.CreateBitCast(inst->getPointerOperand(), Type::getInt8PtrTy(ctx));
       args[2] = ConstantInt::get(Type::getInt64Ty(ctx), reinterpret_cast<uintptr_t>(inst));
-      builder.CreateCall(memoryEventFn, args);
+      builder.CreateCall(fnToCall, args);
     }
 
     // Next we perform a peephole analysis over each instruction in the function. For every load
@@ -106,12 +102,17 @@ namespace {
     // provided with (1) whether the memory instruction is a store or load, (2) the address
     // accessed and (3) the line number of the instruction in the IR.
     void instrumentMemoryEvents(Function& fn) const {
+      auto& ctx = fn.getContext();
+      // Runtime library function to call on load/store
+      auto memoryEventFn = fn.getParent()->getOrInsertFunction("memoryEvent", Type::getVoidTy(ctx),
+        Type::getInt32Ty(ctx), Type::getInt8PtrTy(ctx), Type::getInt64Ty(ctx), nullptr);
+
       for (auto& block : fn) {
         for (auto& inst : block) {
           if (auto loadInst = dyn_cast<LoadInst>(&inst)) {
-            insertCall(fn, loadInst);
+            insertCall(ctx, loadInst, memoryEventFn);
           } else if (auto storeInst = dyn_cast<StoreInst>(&inst)) {
-            insertCall(fn, storeInst);
+            insertCall(ctx, storeInst, memoryEventFn);
           }
         }
       }
