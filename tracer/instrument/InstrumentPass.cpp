@@ -98,9 +98,8 @@ namespace {
         for (auto& inst : block) {
           if (isa<LoadInst>(inst) || isa<StoreInst>(inst)) {
             // Runtime library function to call on load/store
-            Constant* libFun = fun.getParent()->getOrInsertFunction("memoryEvent",
-              Type::getVoidTy(ctx), Type::getInt32Ty(ctx), Type::getInt8PtrTy(ctx),
-              Type::getInt64Ty(ctx), nullptr);
+            auto libFun = fun.getParent()->getOrInsertFunction("memoryEvent", Type::getVoidTy(ctx),
+              Type::getInt32Ty(ctx), Type::getInt8PtrTy(ctx), Type::getInt64Ty(ctx), nullptr);
             Value* args[3]; // TODO use SmallVector?
             IRBuilder<> builder(&inst);
             builder.SetInsertPoint(&block, ++builder.GetInsertPoint()); // Insert call after op
