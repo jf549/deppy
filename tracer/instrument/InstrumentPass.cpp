@@ -100,23 +100,21 @@ namespace {
             // Runtime library function to call on load/store
             Constant* libFun = fun.getParent()->getOrInsertFunction("memoryEvent",
               Type::getVoidTy(ctx), Type::getInt32Ty(ctx), Type::getInt8PtrTy(ctx),
-              Type::getInt32Ty(ctx), nullptr);
+              Type::getInt64Ty(ctx), nullptr);
             Value* args[3]; // TODO use SmallVector?
             IRBuilder<> builder(&inst);
             builder.SetInsertPoint(&block, ++builder.GetInsertPoint()); // Insert call after op
 
             if (auto loadInst = dyn_cast<LoadInst>(&inst)) {
               args[0] = ConstantInt::get(Type::getInt32Ty(ctx), LOAD);
-              Value* loadPtr = builder.CreateBitCast(loadInst->getPointerOperand(), Type::getInt8PtrTy(ctx));
-              args[1] = loadPtr;
-              args[2] = ConstantInt::get(Type::getInt32Ty(ctx), 0);
+              args[1] = builder.CreateBitCast(loadInst->getPointerOperand(), Type::getInt8PtrTy(ctx));
+              args[2] = ConstantInt::get(Type::getInt64Ty(ctx), reinterpret_cast<uintptr_t>(loadInst));
 
             } else {
               auto storeInst = cast<StoreInst>(&inst);
               args[0] = ConstantInt::get(Type::getInt32Ty(ctx), STORE);
-              Value* storePtr = builder.CreateBitCast(storeInst->getPointerOperand(), Type::getInt8PtrTy(ctx));
-              args[1] = storePtr;
-              args[2] = ConstantInt::get(Type::getInt32Ty(ctx), 0);
+              args[1] = builder.CreateBitCast(storeInst->getPointerOperand(), Type::getInt8PtrTy(ctx));
+              args[2] = ConstantInt::get(Type::getInt64Ty(ctx), reinterpret_cast<uintptr_t>(storeInst));
             }
 
             builder.CreateCall(libFun, args);

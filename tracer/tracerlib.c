@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include <stdio.h>
 
 #define LOOP_ENTRY 0
@@ -19,10 +20,10 @@ void loopEvent(int type) {
   }
 }
 
-void memoryEvent(int type, void *addr, int pc) {
+void memoryEvent(int type, void *addr, uint64_t pc) {
   switch (type) {
-    case LOAD: printf("Load: %i %p\n", pc, addr); break;
-    case STORE: printf("Store: %i %p\n", pc, addr); break;
+    case LOAD: printf("Load %llu %p\n", pc, addr); break;
+    case STORE: printf("Store %llu %p\n", pc, addr); break;
     default: perror("Invalid MemoryEvent\n"); break;
   }
 }
