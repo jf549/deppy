@@ -1,4 +1,4 @@
-add_library(InstrumentPass MODULE InstrumentPass.cpp)
+add_llvm_loadable_module(InstrumentPass InstrumentPass.cpp)
 
 set_target_properties(InstrumentPass PROPERTIES COMPILE_FLAGS "-fno-rtti")
 
