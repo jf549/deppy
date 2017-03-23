@@ -1,10 +1,11 @@
-#include <stdint.h>
-
 namespace lib {
-  /// Find the GCD of a and b using the iterative version of Euclid's algorithm.
-  uint64_t gcd(uint64_t a, uint64_t b);
+  template<typename T>
+  struct EgcdResult {
+    T gcd, x, y;
+  };
 
-  /// Perform the Extended Euclidian algorithm on a and b. Returns the GCD of a and b.
-  /// x and y are return values.
-  uint64_t egcd(uint64_t a, uint64_t b, uint64_t* x, uint64_t* y);
+  // Performs the Extended Euclidian algorithm on a and b. That is, finds x, y and gcd(a, b) such
+  // that ax + by = gcd(a, b).
+  template<typename T>
+  EgcdResult<T> egcd(T a, T b);
 }
