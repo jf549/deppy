@@ -8,7 +8,7 @@ namespace lib {
   EgcdResult<T> egcd(T a, T b) {
     T x0 = 1, x1 = 0, y0 = 0, y1 = 1, q, r, xn, yn;
 
-    while (b != 0) {
+    while (b) {
       q = a / b;
       r = a % b;
       a = b;
@@ -23,7 +23,7 @@ namespace lib {
       y1 = yn;
     }
 
-    return {a, x0, y0};
+    return { a, x0, y0 };
   }
 }
 
