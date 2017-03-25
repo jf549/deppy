@@ -24,6 +24,40 @@ namespace {
       AU.addRequired<LoopInfoWrapperPass>();
     }
 
+    void instrumentLoop(Loop* loop, LLVMContext& ctx, Constant* loopEventFn) const {
+      IRBuilder<> callBuilder(ctx);
+
+      // Insert a LoopEntry event into the loop's preheader basic block, just before the
+      // terminator to avoid prematurely announcing loop entry
+      if (auto preheader = loop->getLoopPreheader()) {
+        callBuilder.SetInsertPoint(preheader->getTerminator());
+        callBuilder.CreateCall(loopEventFn, ConstantInt::get(Type::getInt8Ty(ctx), LOOP_ENTRY));
+      } else {
+        errs() << "Failed to get preheader (must be in LoopSimplify form)\n";
+      }
+
+      // Insert a LoopIter event into the loop's latch block
+      if (auto latch = loop->getLoopLatch()) {
+        callBuilder.SetInsertPoint(latch, latch->getFirstInsertionPt());
+        callBuilder.CreateCall(loopEventFn, ConstantInt::get(Type::getInt8Ty(ctx), LOOP_ITER));
+      } else {
+        errs() << "Failed to get loop latch (must be in LoopSimplify form)\n";
+      }
+
+      // Insert a LoopExit event into the beginning of each of the loop's exit blocks
+      if (loop->hasDedicatedExits()) {
+        SmallVector<BasicBlock*, 1> exitBlocks; // TODO tune initial size
+        loop->getUniqueExitBlocks(exitBlocks);
+
+        for (auto exitBlock : exitBlocks) {
+          callBuilder.SetInsertPoint(exitBlock, exitBlock->getFirstInsertionPt());
+          callBuilder.CreateCall(loopEventFn, ConstantInt::get(Type::getInt8Ty(ctx), LOOP_EXIT));
+        }
+      } else {
+         errs() << "Loop does not have dedicated exits (must be in LoopSimplify form)\n";
+      }
+    }
+
     // For each (sub)loop in the function, insert a call to the dynamically linked loopEvent()
     // function into the loop's preheader (entry), latch (iteration) and exit blocks (exit).
     // Nested loops are traversed in depth-first order using an explicit stack.
@@ -34,7 +68,6 @@ namespace {
       const auto& loopInfo = getAnalysis<LoopInfoWrapperPass>().getLoopInfo();
       auto loopEventFn = fn.getParent()->
         getOrInsertFunction("loopEvent", Type::getVoidTy(ctx), Type::getInt8Ty(ctx), nullptr);
-      IRBuilder<> callBuilder(ctx);
       std::stack<Loop*> loopStack;
 
       for (auto loop : loopInfo) {
@@ -49,39 +82,10 @@ namespace {
           loopStack.push(subloop);
         }
 
-        if (!loop->isLoopSimplifyForm()) {
+        if (loop->isLoopSimplifyForm()) {
+          instrumentLoop(loop, ctx, loopEventFn);
+        } else {
           errs() << "Loop not in LoopSimplify form, skipping\n";
-          continue;
-        }
-
-        // Insert a LoopEntry event into the loop's preheader basic block, just before the
-        // terminator to avoid prematurely announcing loop entry
-        if (auto preheader = loop->getLoopPreheader()) {
-          callBuilder.SetInsertPoint(preheader->getTerminator());
-          callBuilder.CreateCall(loopEventFn, ConstantInt::get(Type::getInt8Ty(ctx), LOOP_ENTRY));
-        } else {
-          errs() << "Failed to get preheader (must be in LoopSimplify form)\n";
-        }
-
-        // Insert a LoopIter event into the loop's latch block
-        if (auto latch = loop->getLoopLatch()) {
-          callBuilder.SetInsertPoint(latch, latch->getFirstInsertionPt());
-          callBuilder.CreateCall(loopEventFn, ConstantInt::get(Type::getInt8Ty(ctx), LOOP_ITER));
-        } else {
-          errs() << "Failed to get loop latch (must be in LoopSimplify form)\n";
-        }
-
-        // Insert a LoopExit event into the beginning of each of the loop's exit blocks
-        if (loop->hasDedicatedExits()) {
-          SmallVector<BasicBlock*, 1> exitBlocks; // TODO tune initial size
-          loop->getUniqueExitBlocks(exitBlocks);
-
-          for (auto exitBlock : exitBlocks) {
-            callBuilder.SetInsertPoint(exitBlock, exitBlock->getFirstInsertionPt());
-            callBuilder.CreateCall(loopEventFn, ConstantInt::get(Type::getInt8Ty(ctx), LOOP_EXIT));
-          }
-        } else {
-           errs() << "Loop does not have dedicated exits (must be in LoopSimplify form)\n";
         }
       }
 
