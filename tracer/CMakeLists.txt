@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.7)
+add_library(tracer tracerlib.c)
 
 find_package(LLVM REQUIRED CONFIG)
 
@@ -7,10 +7,6 @@ include(AddLLVM)
 
 add_definitions(${LLVM_DEFINITIONS})
 include_directories(${LLVM_INCLUDE_DIRS})
-
-set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
 
 add_subdirectory(meminstrument)
 add_subdirectory(loopinstrument)
