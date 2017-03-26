@@ -1,3 +1,6 @@
+#ifndef GCD_H
+#define GCD_H
+
 namespace lib {
   template<typename T>
   struct EgcdResult {
@@ -29,3 +32,5 @@ namespace lib {
     return { a, x0, y0 };
   }
 }
+
+#endif // GCD_H

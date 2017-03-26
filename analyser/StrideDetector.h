@@ -1,3 +1,6 @@
+#ifndef STRIDE_DETECTOR_H
+#define STRIDE_DETECTOR_H
+
 #include <stdint.h>
 
 namespace analyser {
@@ -19,3 +22,5 @@ namespace analyser {
     Stride stride;
   };
 }
+
+#endif // STRIDE_DETECTOR_H
