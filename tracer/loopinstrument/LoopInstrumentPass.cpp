@@ -1,3 +1,5 @@
+#include <tracer/tracerdefs.h>
+
 #include "llvm/Pass.h"
 #include "llvm/Analysis/LoopInfo.h"
 #include "llvm/IR/Function.h"
@@ -6,10 +8,6 @@
 #include "llvm/Support/raw_ostream.h"
 
 #include <stack>
-
-#define LOOP_ENTRY 0
-#define LOOP_ITER 1
-#define LOOP_EXIT 2
 
 using namespace llvm;
 

@@ -1,14 +1,7 @@
-#include <stdint.h>
+#include "tracerlib.h"
+#include "tracerdefs.h"
+
 #include <stdio.h>
-
-#define LOOP_ENTRY 0
-#define LOOP_ITER 1
-#define LOOP_EXIT 2
-#define LOAD 0
-#define STORE 1
-
-void loopEvent(uint8_t type);
-void memoryEvent(uint8_t type, void *addr, uint64_t pc);
 
 void loopEvent(uint8_t type) {
   switch (type) {
