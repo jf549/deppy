@@ -1,5 +1,5 @@
 #include "DynamicGcd.h"
-#include "../lib/gcd.h"
+#include <lib/gcd.h>
 
 #include <boost/math/common_factor_rt.hpp>
 
