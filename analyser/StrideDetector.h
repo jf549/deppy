@@ -1,24 +1,22 @@
 #ifndef STRIDE_DETECTOR_H
 #define STRIDE_DETECTOR_H
 
-#include <stdint.h>
+#include "MemoryRef.h"
+
+#include <cstdint>
 
 namespace analyser {
-  enum class State : int {start, firstObs, strideLnd, weakStride, strongStride};
-
-  struct Stride {
-    uint64_t base, diff, limit;
-  };
+  enum class State { start, firstObs, strideLnd, weakStride, strongStride };
 
   class StrideDetector {
   public:
-    StrideDetector(uint64_t addr);
+    StrideDetector();
 
-    Stride getStride() {return stride;}
+    Stride getStride() const;
     void addAddress(uint64_t addr);
 
   private:
-    State s;
+    State state;
     Stride stride;
   };
 }

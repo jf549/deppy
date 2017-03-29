@@ -1,66 +1,73 @@
 #include "StrideDetector.h"
+
 #include <iostream>
+#include <array>
 
 using namespace analyser;
 
-StrideDetector::StrideDetector(uint64_t addr) : s(State::start) {
-  addAddress(addr);
+StrideDetector::StrideDetector() : state(State::start) {}
+
+Stride StrideDetector::getStride() const {
+  return stride;
 }
 
 void StrideDetector::addAddress(uint64_t addr) {
-  switch (s) {
-    case State::start :
-      stride = {addr, 0, 0};
-      s = State::firstObs;
+  switch (state) {
+    case State::start:
+      stride = { addr, 0, 0, 0 };
+      state = State::firstObs;
       break;
 
-    case State::firstObs :
-      stride.diff = addr - stride.base;
-      stride.limit = 1;
-      s = State::strideLnd;
+    case State::firstObs:
+      stride.stride = addr - stride.base;
+      stride.limit = addr;
+      state = State::strideLnd;
       break;
 
-    case State::strideLnd :
-      // addr = base + diff * n for some n
-      // addr - base = diff * n for some n
-      // (addr - base) / diff = n for some n in N
-      if ((addr - stride.base) % stride.diff == 0) {
-        uint64_t n = (addr - stride.base) / stride.diff;
-        if (stride.limit < n) { stride.limit = n; } // TODO: deal with negative n
-        s = State::weakStride;
+    case State::strideLnd:
+      // addr = base + stride * n for some n
+      // addr - base = stride * n for some n
+      // (addr - base) / stride = n for some n in N
+      if ((addr - stride.base) % stride.stride == 0) {
+        if (stride.limit < addr) {
+          stride.limit = addr;
+        } // TODO: deal with negative n
+        state = State::weakStride;
       } else {
-        s = State::firstObs;
+        state = State::firstObs;
       }
       break;
 
-    case State::weakStride :
-      if ((addr - stride.base) % stride.diff == 0) {
-        uint64_t n = (addr - stride.base) / stride.diff;
-        if (stride.limit < n) { stride.limit = n; } // TODO: deal with negative n
-        s = State::strongStride;
+    case State::weakStride:
+      if ((addr - stride.base) % stride.stride == 0) {
+        if (stride.limit < addr) {
+          stride.limit = addr;
+        } // TODO: deal with negative n
+        state = State::strongStride;
       } else {
-        s = State::strideLnd;
+        state = State::strideLnd;
       }
       break;
 
     case State::strongStride :
-      if ((addr - stride.base) % stride.diff == 0) {
-        uint64_t n = (addr - stride.base) / stride.diff;
-        if (stride.limit < n) { stride.limit = n; } // TODO: deal with negative n
+      if ((addr - stride.base) % stride.stride == 0) {
+        if (stride.limit < addr) {
+          stride.limit = addr;
+        } // TODO: deal with negative n
       } else {
-        s = State::weakStride;
+        state = State::weakStride;
       }
       break;
   }
 }
 
-int main(void) {
-  uint64_t a[] = {10, 14, 18, 14, 18, 22, 30, 18, 22, 26};
-  StrideDetector sd(a[0]);
-  for (int i = 1; i < 9; ++i) {
-    sd.addAddress(a[i]);
+int main() {
+  std::array<uint64_t, 10> a{ { 10, 14, 18, 14, 18, 22, 30, 18, 22, 26 } };
+  StrideDetector sd;
+  for (auto i : a) {
+    sd.addAddress(i);
   }
   std::cout << sd.getStride().base << std::endl;
-  std::cout << sd.getStride().diff << std::endl;
+  std::cout << sd.getStride().stride << std::endl;
   std::cout << sd.getStride().limit << std::endl;
 }
