@@ -7,13 +7,38 @@ namespace analyser {
   Loop::Loop() : iter(0), parent(nullptr) {}
   Loop::Loop(Loop* p) : iter(0), parent(p) {}
 
-  // Do the dependence checking and report any found dependences.
-  // Merge the pending and history point tables.
+  // Do the dependence checking and report any found dependences and merge the pending and history
+  // point tables.
   // Finally, the pending table, including killed bits, is flushed.
   void Loop::iterate() {
-    // TODO dependence check
+    // if (iter == 0) {
+    //   historyPointTable = std::move(pendingPointTable);
+    //   // TODO can we move out of pendingPointTable and then reconstruct it afresh?
+    // }
+    for (auto& pair : pendingPointTable) {
+      const auto addr = pair.first;
+      auto& point = pair.second;
 
-    // TODO merge tables
+      if (historyPointTable.count(addr)) { // Dependence
+        auto& historyPoint = pendingPointTable.at(addr);
+
+        std::cout << "Loop-carried dependence: pc " << point.pc
+                  << ", addr " << addr
+                  << (point.isWrite ? ", write" : ", read") << '\n'; //TODO RAW, WAR, WAW
+
+        if (historyPoint.pc == point.pc) {
+          historyPoint.numAccesses += point.numAccesses;
+          historyPoint.iterLastAccessed = iter;
+        } else {
+          historyPoint.next = std::make_unique<Point>(std::move(point));
+        }
+
+        // TODO but both point and historyPoint have nexts we need to check :(
+
+      } else { // No dependence
+        historyPointTable.emplace(std::move(pair)); // Also moves any next pointers
+      }
+    }
 
     pendingPointTable.clear();
     killedAddrs.clear();
@@ -56,8 +81,6 @@ namespace analyser {
       }
     }
   }
-
-  template<typename T> class A;
 
   // Propagation is done by merging the history table of L with the pending table of the parent of L.
   // To handle loop-independent dependences, if a memory address in the history tables of L
