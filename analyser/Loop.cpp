@@ -59,6 +59,7 @@ namespace analyser {
 
   // To handle loop nests, we propagate the history table of L to the parent of L, if it exists.
   void Loop::terminate() {
+    iterate(); // Need to check dependences for final iteration
     if (parent) {
       parent->propagate(historyPointTable);
     }
