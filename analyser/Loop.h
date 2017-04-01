@@ -10,26 +10,34 @@
 namespace analyser {
 
   class Loop {
+    // TODO would an unordered_map be better?
     using PointTableT = std::map<uint64_t /* addr */, std::vector<Point>>;
 
   public:
+    // Construct a top level loop.
     Loop();
-    Loop(Loop* p);
 
+    // Construct a nested loop by providing a pointer to its parent loop.
+    Loop(Loop* parent);
+
+    // Call each time a LoopIter event is seen for this loop.
     void iterate();
 
+    // Call when the LoopEnd event is seen for this loop.
+    // TODO could use destructor instead?
     void terminate();
 
+    // Call each time a memory access event is seen inside this loop.
     void memoryRef(uint64_t pc, uint64_t addr, bool isWrite, unsigned int numAccesses = 1);
 
-  private:
+  protected:
+    // Propagate dependence history from a child of this loop upon termination of the child.
     void propagate(const PointTableT& childHistoryPointTable);
 
     unsigned int iter;
     Loop* parent;
-    // TODO would an unordered_map be better?
     PointTableT pendingPointTable, historyPointTable;
-    std::set<uint64_t /* addr */> killedAddrs;
+    std::set<uint64_t> killedAddrs;
   };
 
 }
