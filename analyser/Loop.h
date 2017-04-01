@@ -5,11 +5,12 @@
 
 #include <map>
 #include <set>
+#include <vector>
 
 namespace analyser {
 
   class Loop {
-    using PointTableT = std::map<uint64_t /* addr */, Point>;
+    using PointTableT = std::map<uint64_t /* addr */, std::vector<Point>>;
 
   public:
     Loop();

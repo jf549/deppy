@@ -11,7 +11,6 @@ namespace analyser {
     bool isWrite;
     unsigned int numAccesses;
     unsigned int iterLastAccessed;
-    std::unique_ptr<Point> next;
   };
 
   struct Stride {

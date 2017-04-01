@@ -15,28 +15,39 @@ namespace analyser {
     //   historyPointTable = std::move(pendingPointTable);
     //   // TODO can we move out of pendingPointTable and then reconstruct it afresh?
     // }
-    for (auto& pair : pendingPointTable) {
+
+    for (const auto& pair : pendingPointTable) {
       const auto addr = pair.first;
-      auto& point = pair.second;
 
       if (historyPointTable.count(addr)) { // Dependence
-        auto& historyPoint = pendingPointTable.at(addr);
+        const auto& points = pair.second;
+        auto& historyPoints = historyPointTable.at(addr);
 
-        std::cout << "Loop-carried dependence: pc " << point.pc
-                  << ", addr " << addr
-                  << (point.isWrite ? ", write" : ", read") << '\n'; //TODO RAW, WAR, WAW
+        for (const auto& point : points) {
+          bool merged = false;
 
-        if (historyPoint.pc == point.pc) {
-          historyPoint.numAccesses += point.numAccesses;
-          historyPoint.iterLastAccessed = iter;
-        } else {
-          historyPoint.next = std::make_unique<Point>(std::move(point));
+          for (auto& historyPoint : historyPoints) {
+            std::cout << "Loop-carried dependence" << '\n'; // TODO details
+
+            // Merge equivalent accesses occuring in subsequent iterations.
+            if (point.pc == historyPoint.pc) {
+              if (point.isWrite != historyPoint.isWrite) {
+                std::cout << "Bad Point!\n";
+              }
+              historyPoint.numAccesses += point.numAccesses;
+              historyPoint.iterLastAccessed = iter;
+              merged = true;
+            }
+          }
+
+          // If no equivalent access has occurred before, add this one to the history.
+          if (!merged) {
+            historyPoints.emplace_back(std::move(point));
+          }
         }
 
-        // TODO but both point and historyPoint have nexts we need to check :(
-
       } else { // No dependence
-        historyPointTable.emplace(std::move(pair)); // Also moves any next pointers
+        historyPointTable.emplace(std::move(pair)); // Merge entire vector for this address
       }
     }
 
@@ -64,16 +75,10 @@ namespace analyser {
 
     } else {
       if (pendingPointTable.count(addr)) {
-        auto& point = pendingPointTable.at(addr);
-
-        if (point.pc == pc) {
-          point.numAccesses += numAccesses;
-        } else {
-          point.next = std::make_unique<Point>(Point{ pc, isWrite, numAccesses, iter, nullptr });
-        }
-
+        pendingPointTable.at(addr).emplace_back(Point{ pc, isWrite, numAccesses, iter });
+        // Each pc can only occur once in an iteration so no need to check for existing point.
       } else {
-        pendingPointTable.emplace(addr, Point{ pc, isWrite, numAccesses, iter, nullptr });
+        pendingPointTable.emplace(addr, std::vector<Point>{ { pc, isWrite, numAccesses, iter } });
       }
 
       if (isWrite) {
@@ -82,21 +87,17 @@ namespace analyser {
     }
   }
 
-  // Propagation is done by merging the history table of L with the pending table of the parent of L.
-  // To handle loop-independent dependences, if a memory address in the history tables of L
-  // is killed by the parent of L, this killed history is not propagated.
-  // We essential treat the inner loop as if it is fully unrolled inside its parent.
+  // Propagation is done by merging the history table of L with the pending table of the parent of
+  // L. To handle loop-independent dependences, if a memory address in the history tables of L is
+  // killed by the parent of L, this killed history is not propagated. We essential treat the inner
+  // loop as if it is fully unrolled inside its parent.
   void Loop::propagate(const PointTableT& childHistoryPointTable) {
     for (const auto& pair : childHistoryPointTable) {
-      const auto& point = pair.second;
-      memoryRef(point.pc, pair.first, point.isWrite, point.numAccesses);
-
-      auto p = point.next.get();
-      while (p) {
-        memoryRef(p->pc, pair.first, p->isWrite, p->numAccesses);
-        p = p->next.get();
+      for (const auto& point : pair.second) {
+        memoryRef(point.pc, pair.first, point.isWrite, point.numAccesses);
       }
     }
+    //TODO could merge whole vectors in
   }
 
 }
