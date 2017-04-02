@@ -44,10 +44,12 @@ void sd3(std::queue<Event>& q) {
 int main() {
   std::queue<Event> q;
   q.push({ { LoopEvent::Type::loopStart } });
-  q.push({ { 1, 1, true } });
+  q.push({ { 1, 1, false } });
   q.push({ { 2, 1, true } });
   q.push({ { LoopEvent::Type::loopIter } });
-  q.push({ { 1, 1, true } });
+  q.push({ { 1, 1, false } });
+  q.push({ { LoopEvent::Type::loopIter } });
+  q.push({ { 1, 1, false } });
   q.push({ { LoopEvent::Type::loopEnd } });
   sd3(q);
 }

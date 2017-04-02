@@ -19,7 +19,7 @@ namespace analyser {
     for (const auto& pair : pendingPointTable) {
       const auto addr = pair.first;
 
-      if (historyPointTable.count(addr)) { // Dependence
+      if (historyPointTable.count(addr)) { // Potential dependences
         const auto& points = pair.second;
         auto& historyPoints = historyPointTable.at(addr);
 
@@ -27,12 +27,21 @@ namespace analyser {
           bool merged = false;
 
           for (auto& historyPoint : historyPoints) {
-            std::cout << "Loop-carried dependence" << '\n'; // TODO details
+            if (historyPoint.isWrite || point.isWrite) { // Dependence
+              std::cout << "Loop-carried dependence: "
+                        << (historyPoint.isWrite ? (point.isWrite ? "WAW " : "RAW ") : "WAR ")
+                        << "at address " << addr
+                        << " from pc " << historyPoint.pc
+                        << " in iteration " << historyPoint.iterLastAccessed
+                        << " to pc " << point.pc
+                        << " in iteration " << point.iterLastAccessed
+                        << '\n';
+            }
 
             // Merge equivalent accesses occuring in subsequent iterations.
             if (point.pc == historyPoint.pc) {
               if (point.isWrite != historyPoint.isWrite) {
-                std::cout << "Bad Point!\n";
+                std::cerr << "Bad Point!\n";
               }
               historyPoint.numAccesses += point.numAccesses;
               historyPoint.iterLastAccessed = iter;
@@ -69,18 +78,32 @@ namespace analyser {
   // If killed, report a loop-independent dependence.
   // Otherwise, store R in PendingPointTable. If R is a write, set its killed bit.
   void Loop::memoryRef(uint64_t pc, uint64_t addr, bool isWrite, unsigned int numAccesses) {
-    if (killedAddrs.count(addr)) {
-      std::cout << "Loop-independent dependence: pc " << pc
-                << ", addr " << addr
-                << (isWrite ? ", write" : ", read") << '\n';
+    if (pendingPointTable.count(addr)) { // Potential dependences
+      auto& points = pendingPointTable.at(addr);
 
-    } else {
-      if (pendingPointTable.count(addr)) {
-        pendingPointTable.at(addr).emplace_back(Point{ pc, isWrite, numAccesses, iter });
-        // Each pc can only occur once in an iteration so no need to check for existing point.
-      } else {
-        pendingPointTable.emplace(addr, std::vector<Point>{ { pc, isWrite, numAccesses, iter } });
+      for (const auto& point : points) {
+        if (point.isWrite || isWrite) { // Dependence
+          std::cout << "Loop-independent dependence: "
+                    << (point.isWrite ? (isWrite ? "WAW" : "RAW") : "WAR")
+                    << " at address " << addr
+                    << " from pc " << point.pc
+                    << " to pc " << pc
+                    << " in iteration " << iter
+                    << '\n';
+        }
       }
+
+      // Each pc can only occur once in an iteration so no need to check for existing point.
+      if (!killedAddrs.count(addr)) {
+        points.emplace_back(Point{ pc, isWrite, numAccesses, iter });
+
+        if (isWrite) {
+          killedAddrs.insert(addr);
+        }
+      }
+
+    } else if (!killedAddrs.count(addr)) {
+      pendingPointTable.emplace(addr, std::vector<Point>{ { pc, isWrite, numAccesses, iter } });
 
       if (isWrite) {
         killedAddrs.insert(addr);
