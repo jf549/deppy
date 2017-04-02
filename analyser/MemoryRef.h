@@ -2,7 +2,6 @@
 #define MEMORY_REF_H
 
 #include <cstdint>
-#include <memory>
 
 namespace analyser {
 
