@@ -1,5 +1,5 @@
 #include "Event.h"
-#include "Loop.h"
+#include "StrideLoop.h"
 
 #include <stack>
 #include <queue>
@@ -8,7 +8,7 @@
 using namespace analyser;
 
 void sd3(std::queue<Event>& q) {
-  std::stack<Loop> loopStack;
+  std::stack<StrideLoop> loopStack;
 
   while (!q.empty()) {
     auto& event = q.front();
