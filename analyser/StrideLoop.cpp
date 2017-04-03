@@ -2,12 +2,18 @@
 
 namespace analyser {
 
+  StrideLoop::StrideLoop() : Loop(), parent(nullptr) {}
+  StrideLoop::StrideLoop(StrideLoop* p) : Loop(), parent(p) {}
+
   void StrideLoop::iterate() {
     Loop::iterate();
   }
 
   void StrideLoop::terminate() {
-    Loop::terminate();
+    iterate();
+    if (parent) {
+      parent->propagate(historyPointTable, historyStrideTable);
+    }
   }
 
   void StrideLoop::memoryRef(uint64_t pc, uint64_t addr, bool isWrite, unsigned int numAccesses) {

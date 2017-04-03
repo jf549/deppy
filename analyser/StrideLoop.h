@@ -12,8 +12,12 @@ namespace analyser {
 
   class StrideLoop : public Loop {
   public:
-    using Loop::Loop;
-    
+    // Construct a top level loop.
+    StrideLoop();
+
+    // Construct a nested loop by providing a pointer to its parent loop.
+    StrideLoop(StrideLoop* parent);
+
     // Call each time a LoopIter event is seen for this loop.
     virtual void iterate() override;
 
@@ -32,6 +36,7 @@ namespace analyser {
     // Propagate dependence history from a child of this loop upon termination of the child.
     void propagate(const PointTableT& childPointTable, const StrideTableT& childStrideTable);
 
+    StrideLoop* parent;
     StrideTableT pendingStrideTable, historyStrideTable;
     std::map<uint64_t /* pc */, StrideDetector> detectors;
   };
