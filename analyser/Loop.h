@@ -1,7 +1,7 @@
 #ifndef LOOP_H
 #define LOOP_H
 
-#include "MemoryRef.h"
+#include "Point.h"
 
 #include <map>
 #include <set>

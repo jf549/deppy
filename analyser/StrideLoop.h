@@ -2,7 +2,7 @@
 #define STRIDE_LOOP_H
 
 #include "Loop.h"
-#include "MemoryRef.h"
+#include "Stride.h"
 #include "StrideDetector.h"
 
 #include <map>

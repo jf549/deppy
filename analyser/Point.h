@@ -1,5 +1,5 @@
-#ifndef MEMORY_REF_H
-#define MEMORY_REF_H
+#ifndef POINT_H
+#define POINT_H
 
 #include <cstdint>
 
@@ -12,11 +12,6 @@ namespace analyser {
     unsigned int iterLastAccessed;
   };
 
-  struct Stride {
-    uint64_t base, stride, limit;
-    unsigned int numAccesses;
-  };
-
 }
 
-#endif // MEMORY_REF_H
+#endif // POINT_H

@@ -7,11 +7,7 @@ using namespace analyser;
 
 StrideDetector::StrideDetector() : state(State::start) {}
 
-Stride StrideDetector::getStride() const {
-  return stride;
-}
-
-void StrideDetector::addAddress(uint64_t addr) {
+void StrideDetector::addAddress(uint64_t pc, uint64_t addr, bool isWrite, unsigned int numAccesses) {
   switch (state) {
     case State::start:
       stride = { addr, 0, 0, 0 };
@@ -61,13 +57,13 @@ void StrideDetector::addAddress(uint64_t addr) {
   }
 }
 
-int main() {
-  std::array<uint64_t, 10> a{ { 10, 14, 18, 14, 18, 22, 30, 18, 22, 26 } };
-  StrideDetector sd;
-  for (auto i : a) {
-    sd.addAddress(i);
-  }
-  std::cout << sd.getStride().base << std::endl;
-  std::cout << sd.getStride().stride << std::endl;
-  std::cout << sd.getStride().limit << std::endl;
-}
+// int main() {
+//   std::array<uint64_t, 10> a{ { 10, 14, 18, 14, 18, 22, 30, 18, 22, 26 } };
+//   StrideDetector sd;
+//   for (auto i : a) {
+//     sd.addAddress(i);
+//   }
+//   std::cout << sd.getStride().base << std::endl;
+//   std::cout << sd.getStride().stride << std::endl;
+//   std::cout << sd.getStride().limit << std::endl;
+// }

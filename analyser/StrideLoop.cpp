@@ -6,7 +6,8 @@ namespace analyser {
   StrideLoop::StrideLoop(StrideLoop* p) : Loop(), parent(p) {}
 
   void StrideLoop::iterate() {
-    Loop::iterate();
+    Loop::iterate(); // Point-point dependences
+    // TODO Point-Stride and Stride-Stride
   }
 
   void StrideLoop::terminate() {
@@ -18,6 +19,7 @@ namespace analyser {
 
   void StrideLoop::memoryRef(uint64_t pc, uint64_t addr, bool isWrite, unsigned int numAccesses) {
     Loop::memoryRef(pc, addr, isWrite, numAccesses);
+    //detectors[pc].addAddress(pc, addr, isWrite, numAccesses);
   }
 
   void StrideLoop::propagate(const PointTableT& childPointTable,
