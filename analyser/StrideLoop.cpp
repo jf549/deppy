@@ -48,7 +48,6 @@ namespace analyser {
         if (isWrite) {
           killedAddrs.insert(addr);
         }
-
       }
 
     } else {
