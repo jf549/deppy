@@ -15,6 +15,8 @@ namespace analyser {
     // current stride.
     bool addAddress(uint64_t addr);
 
+    uint64_t getStride() { return stride; }
+
   private:
     State state;
     uint64_t base, stride, limit;
