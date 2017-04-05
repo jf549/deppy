@@ -1,29 +1,25 @@
 #ifndef STRIDE_DETECTOR_H
 #define STRIDE_DETECTOR_H
 
-#include "Point.h"
-#include "Stride.h"
-
 #include <cstdint>
-#include <map>
 
 namespace analyser {
+
   enum class State { start, firstObs, strideLnd, weakStride, strongStride };
 
   class StrideDetector {
   public:
     StrideDetector();
 
-    void addAddress(uint64_t pc, uint64_t addr, bool isWrite, unsigned int numAccesses);
-
-    using PointTableT = std::map<uint64_t /* addr */, std::vector<Point>>;
-    using StrideTableT = std::map<uint64_t /* pc */, std::vector<Stride>>;
-    void fillTables(PointTableT&, StrideTableT&);
+    // Add a memory reference to this stride detector. Returns true if the reference is part of the
+    // current stride.
+    bool addAddress(uint64_t addr);
 
   private:
     State state;
-    Stride stride;
+    uint64_t base, stride, limit;
   };
+
 }
 
 #endif // STRIDE_DETECTOR_H
