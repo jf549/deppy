@@ -30,4 +30,8 @@ namespace analyser {
     return std::max<unsigned int>(0, result);
   }
 
+  bool Stride::isDependent(uint64_t addr) const {
+    return (base <= addr) && (addr <= limit) && ((addr - base) % stride == 0);
+  }
+
 }
