@@ -7,58 +7,6 @@ namespace analyser {
   Loop::Loop() : iter(0), parent(nullptr) {}
   Loop::Loop(Loop* p) : iter(0), parent(p) {}
 
-  void Loop::reportDependence(uint64_t addr, const Point &source, const Point &sink) const {
-    std::cout << "Loop-carried dependence: "
-              << (source.isWrite ? (sink.isWrite ? "WAW " : "RAW ") : "WAR ")
-              << "at address " << addr
-              << " from pc " << source.pc
-              << " in iteration " << source.iterLastAccessed
-              << " to pc " << sink.pc
-              << " in iteration " << sink.iterLastAccessed
-              << '\n';
-  }
-
-  void Loop::dependenceCheckAndMerge() {
-    for (const auto& pair : pendingPointTable) {
-      const auto addr = pair.first;
-
-      if (historyPointTable.count(addr)) { // Potential dependences
-        const auto& points = pair.second;
-        auto& historyPoints = historyPointTable.at(addr);
-
-        for (const auto& point : points) {
-          bool merged = false;
-
-          for (auto& historyPoint : historyPoints) {
-            if (historyPoint.isWrite || point.isWrite) { // Dependence
-              reportDependence(addr, historyPoint, point);
-            }
-
-            // Merge equivalent accesses occuring in subsequent iterations.
-            if (point.pc == historyPoint.pc) {
-              if (point.isWrite != historyPoint.isWrite) {
-                std::cerr << "Bad Point!\n";
-              }
-              historyPoint.numAccesses += point.numAccesses;
-              historyPoint.iterLastAccessed = iter;
-              merged = true;
-            }
-          }
-
-          // If no equivalent access has occurred before, add this one to the history.
-          if (!merged) {
-            historyPoints.emplace_back(std::move(point));
-          }
-        }
-
-      } else { // No dependence
-        historyPointTable.emplace(std::move(pair)); // Merge entire vector for this address
-      }
-    }
-
-    pendingPointTable.clear();
-  }
-
   // Do the dependence checking and report any found dependences and merge the pending and history
   // point tables.
   // Finally, the pending table, including killed bits, is flushed.
@@ -91,13 +39,7 @@ namespace analyser {
 
       for (const auto& point : points) {
         if (point.isWrite || isWrite) { // Dependence
-          std::cout << "Loop-independent dependence: "
-                    << (point.isWrite ? (isWrite ? "WAW" : "RAW") : "WAR")
-                    << " at address " << addr
-                    << " from pc " << point.pc
-                    << " to pc " << pc
-                    << " in iteration " << iter
-                    << '\n';
+          reportIndependentDependence(point.pc, pc, point.isWrite, isWrite);
         }
       }
 
@@ -130,6 +72,69 @@ namespace analyser {
       }
     }
     //TODO could merge whole vectors in
+  }
+
+  void Loop::reportDependence(uint64_t srcPc, uint64_t sinkPc, bool srcIsWrite, bool sinkIsWrite,
+                              unsigned int srcIter, unsigned int sinkIter) const {
+    std::cout << "Loop-carried dependence: "
+              << (srcIsWrite ? (sinkIsWrite ? "WAW" : "RAW") : "WAR")
+              << " (line: " << srcPc
+              << ", iteration: " << srcIter
+              << ") --> (line: " << sinkPc
+              << ", iteration: " << sinkIter
+              << ")\n";
+  }
+
+  void Loop::reportIndependentDependence(uint64_t srcPc, uint64_t sinkPc, bool srcIsWrite,
+                                         bool sinkIsWrite) const {
+    std::cout << "Loop-independent dependence: "
+              << (srcIsWrite ? (sinkIsWrite ? "WAW" : "RAW") : "WAR")
+              << " (line: " << srcPc
+              << ") --> (line: " << sinkPc
+              << ") iteration: " << iter
+              << '\n';
+  }
+
+  void Loop::dependenceCheckAndMerge() {
+    for (const auto& pair : pendingPointTable) {
+      const auto addr = pair.first;
+
+      if (historyPointTable.count(addr)) { // Potential dependences
+        const auto& points = pair.second;
+        auto& historyPoints = historyPointTable.at(addr);
+
+        for (const auto& point : points) {
+          bool merged = false;
+
+          for (auto& historyPoint : historyPoints) {
+            if (historyPoint.isWrite || point.isWrite) { // Dependence
+              reportDependence(historyPoint.pc, point.pc, historyPoint.isWrite, point.isWrite,
+                               historyPoint.iterLastAccessed, point.iterLastAccessed);
+            }
+
+            // Merge equivalent accesses occuring in subsequent iterations.
+            if (point.pc == historyPoint.pc) {
+              if (point.isWrite != historyPoint.isWrite) {
+                std::cerr << "Bad Point!\n";
+              }
+              historyPoint.numAccesses += point.numAccesses;
+              historyPoint.iterLastAccessed = iter;
+              merged = true;
+            }
+          }
+
+          // If no equivalent access has occurred before, add this one to the history.
+          if (!merged) {
+            historyPoints.emplace_back(std::move(point));
+          }
+        }
+
+      } else { // No dependence
+        historyPointTable.emplace(std::move(pair)); // Merge entire vector for this address
+      }
+    }
+
+    pendingPointTable.clear();
   }
 
 }
