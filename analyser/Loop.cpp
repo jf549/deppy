@@ -12,7 +12,7 @@ namespace analyser {
   // Finally, the pending table, including killed bits, is flushed.
   void Loop::iterate() {
     if (iter == 0) {
-      historyPointTable = std::move(pendingPointTable);
+      std::swap(historyPointTable, pendingPointTable);
 
     } else {
       for (const auto& pair : pendingPointTable) {
@@ -58,9 +58,10 @@ namespace analyser {
           historyPointTable.emplace(std::move(pair)); // Merge entire vector for this address
         }
       }
+
+      pendingPointTable.clear();
     }
 
-    pendingPointTable.clear();
     killedAddrs.clear();
 
     ++iter;
