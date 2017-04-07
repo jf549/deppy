@@ -68,8 +68,10 @@ namespace analyser {
         return false;
 
       case State::strideLnd:
-        if (addr <= limit + stride && addr >= base - stride
-            && (addr > base ? addr - base : base - addr) % stride == 0) {
+        if (stride == 0) {
+          return false;
+        } else if (addr <= limit + stride && addr >= base - stride
+                   && (addr > base ? addr - base : base - addr) % stride == 0) {
           base = std::min(base, addr);
           limit = std::max(limit, addr);
           ++state;
