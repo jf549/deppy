@@ -5,6 +5,7 @@
 #include "Stride.h"
 #include "StrideDetector.h"
 
+#include <cstdint>
 #include <map>
 #include <vector>
 
@@ -34,7 +35,13 @@ namespace analyser {
     using StrideTableT = std::map<uint64_t /* pc */, std::vector<Stride>>;
 
     // Propagate dependence history from a child of this loop upon termination of the child.
-    void propagate(const PointTableT& childPointTable, const StrideTableT& childStrideTable);
+    void propagate(const PointTableT& childPointTable, StrideTableT& childStrideTable,
+                   const std::set<uint64_t>& childKilledAddrs);
+
+    // Merge the pendingStrideTable into the historyStrideTable.
+    void mergeStrideTables();
+
+    void mergeStride(std::vector<Stride>& strides, const Stride& toMerge) const;
 
     StrideLoop* parent;
     StrideTableT pendingStrideTable, historyStrideTable;
