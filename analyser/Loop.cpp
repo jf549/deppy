@@ -15,6 +15,7 @@ namespace analyser {
       std::swap(historyPointTable, pendingPointTable);
     } else {
       dependenceCheckAndMerge();
+      pendingPointTable.clear();
     }
 
     killedAddrs.clear();
@@ -63,15 +64,14 @@ namespace analyser {
 
   // Propagation is done by merging the history table of L with the pending table of the parent of
   // L. To handle loop-independent dependences, if a memory address in the history tables of L is
-  // killed by the parent of L, this killed history is not propagated. We essential treat the inner
-  // loop as if it is fully unrolled inside its parent.
+  // killed by the parent of L, this killed history is not propagated. We essentially treat the
+  // inner loop as if it is fully unrolled inside its parent.
   void Loop::propagate(const PointTableT& childHistoryPointTable) {
     for (const auto& pair : childHistoryPointTable) {
       for (const auto& point : pair.second) {
         memoryRef(point.pc, pair.first, point.isWrite, point.numAccesses);
       }
     }
-    //TODO could merge whole vectors in
   }
 
   void Loop::reportDependence(uint64_t srcPc, uint64_t sinkPc, bool srcIsWrite, bool sinkIsWrite,
@@ -133,8 +133,6 @@ namespace analyser {
         historyPointTable.emplace(std::move(pair)); // Merge entire vector for this address
       }
     }
-
-    pendingPointTable.clear();
   }
 
 }
