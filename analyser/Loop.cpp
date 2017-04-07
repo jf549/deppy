@@ -27,7 +27,7 @@ namespace analyser {
   void Loop::terminate() {
     iterate(); // Need to check dependences for final iteration
     if (parent) {
-      parent->propagate(historyPointTable);
+      parent->propagate(historyPointTable, killedAddrs);
     }
   }
 
@@ -56,12 +56,19 @@ namespace analyser {
   // L. To handle loop-independent dependences, if a memory address in the history tables of L is
   // killed by the parent of L, this killed history is not propagated. We essentially treat the
   // inner loop as if it is fully unrolled inside its parent.
-  void Loop::propagate(const PointTableT& childHistoryPointTable) {
+  void Loop::propagate(const PointTableT& childHistoryPointTable,
+                       const std::set<uint64_t>& childKilledAddrs) {
     for (const auto& pair : childHistoryPointTable) {
-      for (const auto& point : pair.second) {
-        memoryRef(point.pc, pair.first, point.isWrite, point.numAccesses);
+      const auto addr = pair.first;
+
+      if (!killedAddrs.count(addr)) {
+        const auto& childPoints = pair.second;
+        auto& points = pendingPointTable[addr];
+        points.insert(end(points), begin(childPoints), end(childPoints));
       }
     }
+
+    killedAddrs.insert(begin(childKilledAddrs), end(childKilledAddrs));
   }
 
   void Loop::reportDependence(uint64_t srcPc, uint64_t sinkPc, bool srcIsWrite, bool sinkIsWrite,

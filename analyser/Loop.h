@@ -32,7 +32,8 @@ namespace analyser {
     using PointTableT = std::map<uint64_t /* addr */, std::vector<Point>>;
 
     // Propagate dependence history from a child of this loop upon termination of the child.
-    void propagate(const PointTableT& childHistoryPointTable);
+    void propagate(const PointTableT& childHistoryPointTable,
+                   const std::set<uint64_t>& childKilledAddrs);
 
     // Report a loop-dependent dependence.
     void reportDependence(uint64_t sourcePc, uint64_t sinkPc, bool sourceIsWrite, bool sinkIsWrite,
