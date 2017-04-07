@@ -35,26 +35,16 @@ namespace analyser {
   // If killed, report a loop-independent dependence.
   // Otherwise, store R in PendingPointTable. If R is a write, set its killed bit.
   void Loop::memoryRef(uint64_t pc, uint64_t addr, bool isWrite, unsigned int numAccesses) {
-    if (pendingPointTable.count(addr)) { // Potential dependences
-      auto& points = pendingPointTable.at(addr);
+    auto& points = pendingPointTable[addr];
 
-      for (const auto& point : points) {
-        if (point.isWrite || isWrite) { // Dependence
-          reportIndependentDependence(point.pc, pc, point.isWrite, isWrite);
-        }
+    for (const auto& point : points) {
+      if (point.isWrite || isWrite) {
+        reportIndependentDependence(point.pc, pc, point.isWrite, isWrite);
       }
+    }
 
-      // Each pc can only occur once in an iteration so no need to check for existing point.
-      if (!killedAddrs.count(addr)) {
-        points.emplace_back(Point{ pc, isWrite, numAccesses, iter });
-
-        if (isWrite) {
-          killedAddrs.insert(addr);
-        }
-      }
-
-    } else if (!killedAddrs.count(addr)) {
-      pendingPointTable.emplace(addr, std::vector<Point>{ { pc, isWrite, numAccesses, iter } });
+    if (!killedAddrs.count(addr)) {
+      points.emplace_back(Point{ pc, isWrite, numAccesses, iter });
 
       if (isWrite) {
         killedAddrs.insert(addr);
