@@ -1,4 +1,5 @@
 add_library (Analyser
+             DebugInfo.cpp
              Loop.cpp
              Stride.cpp
              StrideDetector.cpp
