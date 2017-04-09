@@ -22,3 +22,9 @@ The C program will be compiled with instrumentation into the executable `build/t
 $ cd build
 $ ./tracer/tracer | ./analyser/deppy
 ```
+
+### Running the unit tests
+```shell
+$ cd build
+$ ./test/tests
+```
