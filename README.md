@@ -15,7 +15,7 @@ $ make
 $ cd build
 $ ./tracer/instrument.sh
 ```
-The C program will be compiled with instrumentation into the executable /build/tracer/tracer
+The C program will be compiled with instrumentation into the executable `build/tracer/tracer`.
 
 ### Running the profiler
 ```shell
