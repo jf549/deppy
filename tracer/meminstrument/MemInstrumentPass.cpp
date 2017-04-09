@@ -2,8 +2,10 @@
 
 #include "llvm/Pass.h"
 #include "llvm/IR/Function.h"
+#include "llvm/IR/Instruction.h"
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/Module.h"
+#include "llvm/Support/FileSystem.h"
 #include "llvm/Support/raw_ostream.h"
 
 using namespace llvm;
@@ -12,19 +14,40 @@ namespace {
   // An LLVM pass to instrument memory events (load and store instruction)
   struct MemInstrumentPass : public FunctionPass {
     static char ID;
-    MemInstrumentPass() : FunctionPass(ID) {}
+    std::error_code ec;
+    raw_fd_ostream debugInfo;
+
+    MemInstrumentPass() : FunctionPass(ID), debugInfo("debug_info", ec, sys::fs::F_RW) {
+      if (ec) {
+        errs() << "Failed to open debug_info file\n";
+      }
+    }
 
     // Insert a function call just before a load or store instruction. Using function template to
     // workaround lack of load/store base class, without duplicating code.
     template<typename InstT>
-    void insertCall(LLVMContext& ctx, InstT* inst, Constant* fnToCall) const {
+    void insertCall(LLVMContext& ctx, InstT* inst, Constant* fnToCall) {
+      auto pc = reinterpret_cast<uintptr_t>(inst);
       IRBuilder<> callBuilder(inst); // Insert function call before instruction
+
       Value* args[3] = {
         ConstantInt::get(Type::getInt8Ty(ctx), std::is_same<InstT, LoadInst>::value ? LOAD : STORE),
         callBuilder.CreateBitCast(inst->getPointerOperand(), Type::getInt8PtrTy(ctx)),
-        ConstantInt::get(Type::getInt64Ty(ctx), reinterpret_cast<uintptr_t>(inst))
+        ConstantInt::get(Type::getInt64Ty(ctx), pc)
       };
+
       callBuilder.CreateCall(fnToCall, args);
+
+      // Write pc:file:line#:col# to debug_info so analyser can convert pc to useful debugging info.
+      if (const auto& debugLoc = inst->getDebugLoc()) {
+        if (!ec) {
+          debugInfo << pc << ':';
+          debugLoc.print(debugInfo);
+          debugInfo << '\n';
+        }
+      } else {
+        errs() << "Failed to get debugging information\n";
+      }
     }
 
     // Perform a peephole analysis over each instruction in the function. For every load or store
