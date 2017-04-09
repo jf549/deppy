@@ -4,7 +4,7 @@
 #define LOOP_ENTRY 0
 #define LOOP_ITER 1
 #define LOOP_EXIT 2
-#define LOAD 0
-#define STORE 1
+#define LOAD 3
+#define STORE 4
 
 #endif // TRACERDEFS_H
