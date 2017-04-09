@@ -10,6 +10,8 @@ include_directories(${PROJECT_SOURCE_DIR} ext/catch/single_include)
 
 enable_testing()
 
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/examples DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+
 add_subdirectory(lib)
 add_subdirectory(analyser)
 add_subdirectory(tracer)
