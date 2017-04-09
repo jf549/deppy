@@ -13,7 +13,7 @@ $ make
 ### Instrumenting a C program
 ```shell
 $ cd build
-$ ./tracer/instrument.sh
+$ ./tracer/instrument.sh path/to/source.c
 ```
 The C program will be compiled with instrumentation into the executable `build/tracer/tracer`.
 
