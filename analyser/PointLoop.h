@@ -29,6 +29,8 @@ namespace analyser {
     // table and M the size of the history table.
     void findPointPointDependences();
 
+    void mergePointTables();
+
     unsigned int iter;
     PointTableT pendingPointTable, historyPointTable;
     std::set<uint64_t> killedAddrs;

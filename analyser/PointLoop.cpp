@@ -27,23 +27,65 @@ namespace analyser {
     killedAddrs.insert(begin(childLoop.killedAddrs), end(childLoop.killedAddrs));
   }
 
+  // TODO: try lookup instead
   void PointLoop::findPointPointDependences() {
-    for (const auto& pair : pendingPointTable) {
-      const auto addr = pair.first;
+    auto itp = cbegin(pendingPointTable);
+    auto ith = cbegin(historyPointTable);
 
-      if (historyPointTable.count(addr)) { // Potential dependences
-        const auto& points = pair.second;
-        auto& historyPoints = historyPointTable.at(addr);
+    while (itp != cend(pendingPointTable) && ith != cend(historyPointTable)) {
+      if (itp->first < ith->first) {
+        ++itp;
 
-        for (const auto& point : points) {
+      } else if (ith->first < itp->first) {
+        ++ith;
+
+      } else {
+        for (const auto& point : itp->second) {
+          for (const auto& historyPoint : ith->second) {
+            if (historyPoint.isWrite || point.isWrite) {
+              reportDependence(historyPoint.pc, point.pc, historyPoint.isWrite, point.isWrite,
+                               historyPoint.iterLastAccessed, iter);
+            }
+          }
+        }
+        ++itp;
+        ++ith;
+      }
+    }
+  }
+
+  void PointLoop::mergePointTables() {
+    PointTableT tmp;
+    auto itp = cbegin(pendingPointTable);
+    auto endp = cend(pendingPointTable);
+    auto ith = cbegin(historyPointTable);
+    auto endh = cend(historyPointTable);
+    auto itr = std::inserter(tmp, begin(tmp));
+
+    while (true) {
+      if (itp == endp) {
+        tmp.insert(ith, endh);
+        break;
+
+      } else if (ith == endh) {
+        tmp.insert(itp, endp);
+        break;
+
+      } else if (itp->first < ith->first) {
+        *itr = *itp;
+        ++itp;
+
+      } else if (ith->first < itp->first) {
+        *itr = *ith;
+        ++ith;
+
+      } else {
+        std::vector<Point> res = ith->second;
+
+        for (const auto& point : itp->second) {
           bool merged = false;
 
-          for (auto& historyPoint : historyPoints) {
-            if (historyPoint.isWrite || point.isWrite) { // Dependence
-              reportDependence(historyPoint.pc, point.pc, historyPoint.isWrite, point.isWrite,
-                               historyPoint.iterLastAccessed, point.iterLastAccessed);
-            }
-
+          for (auto& historyPoint : res) {
             // Merge equivalent accesses occuring in subsequent iterations.
             if (point.pc == historyPoint.pc && !merged) {
               if (point.isWrite != historyPoint.isWrite) {
@@ -58,14 +100,20 @@ namespace analyser {
 
           // If no equivalent access has occurred before, add this one to the history.
           if (!merged) {
-            historyPoints.emplace_back(std::move(point));
+            res.emplace_back(std::move(point));
           }
         }
 
-      } else { // No dependence
-        historyPointTable.emplace(std::move(pair)); // Merge entire vector for this address
+        itr = { itp->first, std::move(res) };
+
+        ++itp;
+        ++ith;
       }
+
+      ++itr;
     }
+
+    historyPointTable = std::move(tmp);
   }
 
   // Do the dependence checking and report any found dependences. Merge the pending and history
@@ -75,6 +123,7 @@ namespace analyser {
       std::swap(historyPointTable, pendingPointTable);
     } else {
       findPointPointDependences();
+      mergePointTables();
       pendingPointTable.clear();
     }
   }

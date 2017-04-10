@@ -56,8 +56,7 @@ namespace analyser {
           for (const auto& historyStride : historyPair.second) {
             if ((stride.isWrite || historyStride.isWrite) && stride.numDependences(historyStride)) {
               reportDependence(historyPair.first, pair.first, historyStride.isWrite,
-                               stride.isWrite, historyStride.iterLastAccessed,
-                               stride.iterLastAccessed);
+                stride.isWrite, historyStride.iterLastAccessed, iter);
             }
           }
         }
@@ -71,9 +70,10 @@ namespace analyser {
         for (const auto& historyStride : historyPair.second) {
           if (historyStride.isDependent(pair.first)) {
             for (const auto& point : pair.second) {
-              reportDependence(historyPair.first, pair.first, historyStride.isWrite,
-                               point.isWrite, historyStride.iterLastAccessed,
-                               point.iterLastAccessed);
+              if (point.isWrite || historyStride.isWrite) {
+                reportDependence(historyPair.first, pair.first, historyStride.isWrite,
+                  point.isWrite, historyStride.iterLastAccessed, iter);
+              }
             }
           }
         }
@@ -87,9 +87,10 @@ namespace analyser {
         for (const auto& stride : pair.second) {
           if (stride.isDependent(historyPair.first)) {
             for (const auto& historyPoint : historyPair.second) {
-              reportDependence(historyPair.first, pair.first, historyPoint.isWrite,
-                               stride.isWrite, historyPoint.iterLastAccessed,
-                               stride.iterLastAccessed);
+              if (stride.isWrite || historyPoint.isWrite) {
+                reportDependence(historyPair.first, pair.first, historyPoint.isWrite,
+                  stride.isWrite, historyPoint.iterLastAccessed, iter);
+              }
             }
           }
         }
@@ -105,7 +106,7 @@ namespace analyser {
           && toMerge.base >= s.base - s.stride && toMerge.limit <= s.limit + s.stride) {
         s.base = std::min(s.base, toMerge.base);
         s.limit = std::max(s.limit, toMerge.limit);
-        s.iterLastAccessed = toMerge.iterLastAccessed;
+        s.iterLastAccessed = iter;
         s.numAccesses += toMerge.numAccesses;
         merged = true;
         break;
@@ -134,11 +135,12 @@ namespace analyser {
       std::swap(historyStrideTable, pendingStrideTable);
 
     } else {
+      findPointPointDependences();
       findStrideStrideDependences();
       findStridePointDependences();
       findPointStrideDependences();
-      findPointPointDependences(); // Also merges point tables
 
+      mergePointTables();
       mergeStrideTables();
 
       pendingPointTable.clear();
