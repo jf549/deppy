@@ -1,8 +1,6 @@
 #include "StrideLoop.h"
 #include "Logger.h"
 
-#include <iostream>
-
 namespace analyser {
 
   StrideLoop::StrideLoop() : PointLoop(), parent(nullptr) {}

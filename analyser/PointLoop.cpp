@@ -1,8 +1,6 @@
 #include "PointLoop.h"
 #include "Logger.h"
 
-#include <iostream>
-
 namespace analyser {
 
   PointLoop::PointLoop() : Loop(), iter(0), parent(nullptr) {}
