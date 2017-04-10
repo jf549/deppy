@@ -89,7 +89,7 @@ namespace analyser {
             // Merge equivalent accesses occuring in subsequent iterations.
             if (point.pc == historyPoint.pc && !merged) {
               if (point.isWrite != historyPoint.isWrite) {
-                std::cerr << "Bad Point!\n";
+                throw std::invalid_argument("Bad point");
               }
 
               historyPoint.numAccesses += point.numAccesses;
