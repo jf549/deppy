@@ -5,9 +5,9 @@ int main(void) {
   y = y + 4;
 
   for (int i = 0; i < 6; ++i) {
-    y += 1;
+    y = y + 1;
     for (int j = 0; j < 6; ++j) {
-      x += 1;
+      x = x + 1;
     }
   }
 
