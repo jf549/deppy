@@ -1,6 +1,8 @@
 #include "PointLoop.h"
 #include "Logger.h"
 
+#include <cassert>
+
 namespace analyser {
 
   PointLoop::PointLoop() : Loop(), iter(0), parent(nullptr) {}
@@ -53,65 +55,59 @@ namespace analyser {
   }
 
   void PointLoop::mergePointTables() {
-    PointTableT tmp;
+    PointTableT mergedPointTable;
     auto itp = cbegin(pendingPointTable);
     auto endp = cend(pendingPointTable);
     auto ith = cbegin(historyPointTable);
     auto endh = cend(historyPointTable);
-    auto itr = std::inserter(tmp, begin(tmp));
 
     while (true) {
       if (itp == endp) {
-        tmp.insert(ith, endh);
+        mergedPointTable.insert(ith, endh);
         break;
 
       } else if (ith == endh) {
-        tmp.insert(itp, endp);
+        mergedPointTable.insert(itp, endp);
         break;
 
       } else if (itp->first < ith->first) {
-        *itr = *itp;
+        mergedPointTable.emplace_hint(end(mergedPointTable), std::move(*itp));
         ++itp;
 
       } else if (ith->first < itp->first) {
-        *itr = *ith;
+        mergedPointTable.emplace_hint(end(mergedPointTable), std::move(*ith));
         ++ith;
 
       } else {
-        std::vector<Point> res = ith->second;
+        auto mergedPoints = std::move(ith->second);
 
         for (const auto& point : itp->second) {
           bool merged = false;
 
-          for (auto& historyPoint : res) {
+          for (auto& mergedPoint : mergedPoints) {
             // Merge equivalent accesses occuring in subsequent iterations.
-            if (point.pc == historyPoint.pc && !merged) {
-              if (point.isWrite != historyPoint.isWrite) {
-                throw std::invalid_argument("Bad point");
-              }
-
-              historyPoint.numAccesses += point.numAccesses;
-              historyPoint.iterLastAccessed = iter;
+            if (point.pc == mergedPoint.pc) {
+              assert(point.isWrite == mergedPoint.isWrite);
+              mergedPoint.numAccesses += point.numAccesses;
+              mergedPoint.iterLastAccessed = iter;
               merged = true;
+              break;
             }
           }
 
           // If no equivalent access has occurred before, add this one to the history.
           if (!merged) {
-            res.emplace_back(std::move(point));
+            mergedPoints.emplace_back(std::move(point));
           }
         }
 
-        itr = { itp->first, std::move(res) };
-
+        mergedPointTable.emplace_hint(end(mergedPointTable), ith->first, std::move(mergedPoints));
         ++itp;
         ++ith;
       }
-
-      ++itr;
     }
 
-    historyPointTable = std::move(tmp);
+    historyPointTable = std::move(mergedPointTable);
   }
 
   // Do the dependence checking and report any found dependences. Merge the pending and history
