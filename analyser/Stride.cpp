@@ -13,21 +13,26 @@ namespace analyser {
     }
 
     auto low = std::max(base, other.base);
+    auto high = std::min(limit, other.limit);
+
+    if (high < low) {
+      return 0;
+    }
+
     auto delta = (stride - ((low - base) % stride)) % stride;
 
     if (delta % boost::math::gcd(stride, other.stride) != 0) {
       return 0;
     }
 
-    auto high = std::min(limit, other.limit);
     auto length = high - low + 1;
 
-    auto res = lib::egcd(-stride, other.stride);
+    auto res = lib::egcd(stride, other.stride);
     auto lcm = (stride / res.gcd) * other.stride; // gcd divides both; more efficient to divide only one
     auto offset = (other.stride * res.y * delta / res.gcd + lcm) % lcm;
     auto result = (length - (offset + 1) + lcm) / lcm;
 
-    return std::max<unsigned int>(0, result);
+    return result;
   }
 
   bool Stride::isDependent(uint64_t addr) const {
