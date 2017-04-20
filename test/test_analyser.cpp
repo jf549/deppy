@@ -68,6 +68,8 @@ TEST_CASE("Stride-point dependences are computed", "[stridepointdep]") {
 
 TEST_CASE("Strides are detected", "[stridedetect]") {
   analyser::StrideDetector sd;
+
+  // First stride
   REQUIRE(sd.addAddress(10) == false);
   REQUIRE(sd.addAddress(14) == false);
   REQUIRE(sd.addAddress(18) == true);
@@ -79,12 +81,37 @@ TEST_CASE("Strides are detected", "[stridedetect]") {
   REQUIRE(sd.addAddress(26) == true);
   REQUIRE(sd.addAddress(30) == true);
 
+  // Second stride
   REQUIRE(sd.addAddress(50) == false);
   REQUIRE(sd.addAddress(51) == false);
   REQUIRE(sd.addAddress(52) == false);
   REQUIRE(sd.addAddress(53) == false);
-  REQUIRE(sd.addAddress(54) == false);
+  REQUIRE(sd.addAddress(54) == true);
   REQUIRE(sd.addAddress(55) == true);
   REQUIRE(sd.addAddress(56) == true);
   REQUIRE(sd.addAddress(57) == true);
+
+  // Third stride, fixed address
+  REQUIRE(sd.addAddress(22) == false);
+  REQUIRE(sd.addAddress(22) == false);
+  REQUIRE(sd.addAddress(22) == false);
+  REQUIRE(sd.addAddress(22) == false);
+  REQUIRE(sd.addAddress(22) == false);
+  REQUIRE(sd.addAddress(22) == false);
+
+  // Fourth stride, decreasing
+  REQUIRE(sd.addAddress(30) == false);
+  REQUIRE(sd.addAddress(27) == false);
+  REQUIRE(sd.addAddress(24) == true);
+  REQUIRE(sd.addAddress(21) == true);
+  REQUIRE(sd.addAddress(18) == true);
+  REQUIRE(sd.addAddress(15) == true);
+  REQUIRE(sd.addAddress(12) == true);
+  REQUIRE(sd.addAddress(9) == true);
+  REQUIRE(sd.addAddress(0) == false);
+  REQUIRE(sd.addAddress(0) == false);
+  REQUIRE(sd.addAddress(6) == true);
+  REQUIRE(sd.addAddress(0) == false);
+  REQUIRE(sd.addAddress(0) == false);
+  REQUIRE(sd.addAddress(3) == false);
 }
