@@ -5,19 +5,25 @@
 
 namespace analyser {
 
-  enum class State { start, firstObs, strideLnd, weakStride, strongStride };
-
   class StrideDetector {
   public:
     StrideDetector();
 
     // Add a memory reference to this stride detector. Returns true if the reference is part of the
     // current stride.
-    bool addAddress(uint64_t addr);
+    bool addAddress(const uint64_t addr);
 
-    uint64_t getStride() { return stride; }
+    // Returns true iff the StrideDetector is in an accepting state.
+    bool isAccepting() const;
+
+    // Get the stride distance of the currently detected stride.
+    uint64_t getStride() const { return stride; }
+
+    enum class State { start, firstObs, strideLnd, weakStride, strongStride };
 
   private:
+    bool isInLearnedStride(const uint64_t addr) const;
+
     State state;
     uint64_t base, stride, limit;
   };
