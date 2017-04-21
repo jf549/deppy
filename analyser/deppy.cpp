@@ -1,5 +1,5 @@
 #include "StrideLoop.h"
-#include <tracer/tracerdefs.h>
+#include <lib/event.h>
 
 #include <iostream>
 #include <stack>
