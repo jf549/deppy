@@ -6,10 +6,10 @@
 
 namespace analyser {
 
-  static std::unordered_map<uint64_t, DebugInfo> infoMap;
-  static bool init = false;
-
   DebugInfo getDebugInfo(const uint64_t pc) {
+    static std::unordered_map<uint64_t, DebugInfo> infoMap;
+    static bool init = false;
+
     if (!init) {
       std::ifstream debugInfo("debug_info");
       std::string line;
