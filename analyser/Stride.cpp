@@ -7,7 +7,7 @@
 
 namespace analyser {
 
-  unsigned int Stride::numDependences(const Stride& other) const {
+  uint64_t Stride::numDependences(const Stride& other) const {
     if (other.base < base) {
       return other.numDependences(*this);
     }
