@@ -31,9 +31,9 @@ namespace analyser {
 
     void mergePointTables();
 
-    unsigned int iter;
     PointTableT pendingPointTable, historyPointTable;
     std::set<uint64_t> killedAddrs;
+    unsigned int iter;
 
   private:
     virtual void doDependenceCheck() override;
