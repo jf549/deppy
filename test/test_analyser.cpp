@@ -55,12 +55,12 @@ TEST_CASE("Number of stride-stride dependences is computed", "[stridedep]") {
 TEST_CASE("Stride-point dependences are computed", "[stridepointdep]") {
   analyser::Stride s0{ 0, 2, 100, true, 1, 1 };
 
-  for (int i = 0; i <= 100; i += 2) {
+  for (unsigned i = 0; i <= 100; i += 2) {
     REQUIRE(s0.isDependent(i) == true);
     REQUIRE(s0.isDependent(i + 1) == false);
   }
 
-  for (int i = 101; i < 1000; ++i) {
+  for (unsigned i = 101; i < 1000; ++i) {
     REQUIRE(s0.isDependent(i) == false);
   }
 
