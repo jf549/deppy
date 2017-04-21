@@ -41,7 +41,7 @@ int main() {
             loopStack.top().memoryRef(memEvent.pc, memEvent.addr, event == STORE);
           }
         } else {
-          std::cerr << "Did not receive memory event";
+          std::cerr << "Did not receive memory event\n";
           return 1;
         }
         break;
