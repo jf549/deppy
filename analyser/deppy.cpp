@@ -36,11 +36,17 @@ int main() {
 
       case LOAD:
       case STORE:
-        std::cin.read(reinterpret_cast<char*>(&memEvent), sizeof(memEvent));
-        if (!loopStack.empty()) {
-          loopStack.top().memoryRef(memEvent.pc, memEvent.addr, event == STORE);
+        if (std::cin.read(reinterpret_cast<char*>(&memEvent), sizeof(memEvent))) {
+          if (!loopStack.empty()) {
+            loopStack.top().memoryRef(memEvent.pc, memEvent.addr, event == STORE);
+          }
+        } else {
+          std::cerr << "Did not receive memory event";
+          return 1;
         }
         break;
     }
   }
+
+  return 0;
 }
