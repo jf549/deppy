@@ -24,8 +24,8 @@ namespace analyser {
   private:
     bool isInLearnedStride(const uint64_t addr) const;
 
-    State state;
     uint64_t base, stride, limit;
+    State state;
   };
 
 }

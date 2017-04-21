@@ -183,7 +183,7 @@ namespace analyser {
           Stride{ addr, detector.getStride(), addr, isWrite, numAccesses, iter });
 
       } else { // R is a point.
-        pendingPointTable[addr].emplace_back(Point{ pc, isWrite, numAccesses, iter });
+        pendingPointTable[addr].emplace_back(Point{ pc, numAccesses, iter, isWrite });
       }
 
       if (isWrite) {

@@ -136,7 +136,7 @@ namespace analyser {
     }
 
     if (!killedAddrs.count(addr)) {
-      points.emplace_back(Point{ pc, isWrite, numAccesses, iter });
+      points.emplace_back(Point{ pc, numAccesses, iter, isWrite });
 
       if (isWrite) {
         killedAddrs.insert(addr);
