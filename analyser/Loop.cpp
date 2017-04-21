@@ -2,6 +2,9 @@
 
 namespace analyser {
 
+  Loop::Loop() = default;
+  Loop::~Loop() = default;
+
   void Loop::iterate() {
     doDependenceCheck();
     doIteration();
