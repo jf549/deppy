@@ -15,6 +15,7 @@ namespace {
   // An LLVM pass to instrument loop events (loop entry, iteration and exit)
   struct LoopInstrumentPass : public FunctionPass {
     static char ID;
+
     LoopInstrumentPass() : FunctionPass(ID) {}
 
     void getAnalysisUsage(AnalysisUsage& AU) const override {
