@@ -7,6 +7,9 @@ namespace analyser {
 
   class Loop {
   public:
+    Loop() = default;
+    virtual ~Loop() = default;
+
     // Call each time a LoopIter event is seen for this loop.
     void iterate();
 
