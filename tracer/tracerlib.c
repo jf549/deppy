@@ -10,7 +10,8 @@ void loopEvent(event_t type) {
       fwrite(&type, sizeof(type), 1, stdout);
       break;
 
-    default:
+    case LOAD:
+    case STORE:
       perror("Invalid LoopEvent\n");
       break;
   }
@@ -26,7 +27,9 @@ void memoryEvent(event_t type, void *addr, uint64_t pc) {
       fwrite(&me, sizeof(me), 1, stdout);
       break;
 
-    default:
+    case LOOP_ENTRY:
+    case LOOP_ITER:
+    case LOOP_EXIT:
       perror("Invalid MemoryEvent\n");
       break;
   }
