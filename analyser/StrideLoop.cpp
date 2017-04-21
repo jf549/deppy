@@ -31,7 +31,8 @@ namespace analyser {
 
             } else {
               strides.emplace_back(Stride{ addr + stride.stride, stride.stride, stride.limit,
-                                   stride.isWrite, stride.numAccesses, stride.iterLastAccessed });
+                                           stride.numAccesses, stride.iterLastAccessed,
+                                           stride.isWrite });
               stride.limit = addr - stride.stride;
             }
           }
@@ -180,7 +181,7 @@ namespace analyser {
 
       if (detector.addAddress(addr)) { // R is part of a stride.
         pendingStrideTable[pc].emplace_back(
-          Stride{ addr, detector.getStride(), addr, isWrite, numAccesses, iter });
+          Stride{ addr, detector.getStride(), addr, numAccesses, iter, isWrite });
 
       } else { // R is a point.
         pendingPointTable[addr].emplace_back(Point{ pc, numAccesses, iter, isWrite });
