@@ -4,51 +4,10 @@
 
 namespace analyser {
 
-  StrideDetector::State& operator++(StrideDetector::State& state) {
-    switch(state) {
-      case StrideDetector::State::start:
-        return state = StrideDetector::State::firstObs;
-
-      case StrideDetector::State::firstObs:
-        return state = StrideDetector::State::strideLnd;
-
-      case StrideDetector::State::strideLnd:
-        return state = StrideDetector::State::weakStride;
-
-      case StrideDetector::State::weakStride:
-      case StrideDetector::State::strongStride:
-        return state = StrideDetector::State::strongStride;
-    }
-  }
-
-  StrideDetector::State operator++(StrideDetector::State& state, int) {
-    StrideDetector::State tmp(state);
-    ++state;
-    return tmp;
-  }
-
-  StrideDetector::State& operator--(StrideDetector::State& state) {
-    switch(state) {
-      case StrideDetector::State::start:
-      case StrideDetector::State::firstObs:
-        return state = StrideDetector::State::start;
-
-      case StrideDetector::State::strideLnd:
-        return state = StrideDetector::State::firstObs;
-
-      case StrideDetector::State::weakStride:
-        return state = StrideDetector::State::strideLnd;
-
-      case StrideDetector::State::strongStride:
-        return state = StrideDetector::State::weakStride;
-    }
-  }
-
-  StrideDetector::State operator--(StrideDetector::State& state, int) {
-    StrideDetector::State tmp(state);
-    --state;
-    return tmp;
-  }
+  StrideDetector::State& operator++(StrideDetector::State& state);
+  StrideDetector::State operator++(StrideDetector::State& state, int);
+  StrideDetector::State& operator--(StrideDetector::State& state);
+  StrideDetector::State operator--(StrideDetector::State& state, int);
 
   StrideDetector::StrideDetector() : state(State::start) {}
 
@@ -114,6 +73,52 @@ namespace analyser {
     return addr <= limit + stride
            && addr >= base - stride
            && (addr > base ? addr - base : base - addr) % stride == 0;
+  }
+
+  StrideDetector::State& operator++(StrideDetector::State& state) {
+    switch(state) {
+      case StrideDetector::State::start:
+        return state = StrideDetector::State::firstObs;
+
+      case StrideDetector::State::firstObs:
+        return state = StrideDetector::State::strideLnd;
+
+      case StrideDetector::State::strideLnd:
+        return state = StrideDetector::State::weakStride;
+
+      case StrideDetector::State::weakStride:
+      case StrideDetector::State::strongStride:
+        return state = StrideDetector::State::strongStride;
+    }
+  }
+
+  StrideDetector::State operator++(StrideDetector::State& state, int) {
+    StrideDetector::State tmp(state);
+    ++state;
+    return tmp;
+  }
+
+  StrideDetector::State& operator--(StrideDetector::State& state) {
+    switch(state) {
+      case StrideDetector::State::start:
+      case StrideDetector::State::firstObs:
+        return state = StrideDetector::State::start;
+
+      case StrideDetector::State::strideLnd:
+        return state = StrideDetector::State::firstObs;
+
+      case StrideDetector::State::weakStride:
+        return state = StrideDetector::State::strideLnd;
+
+      case StrideDetector::State::strongStride:
+        return state = StrideDetector::State::weakStride;
+    }
+  }
+
+  StrideDetector::State operator--(StrideDetector::State& state, int) {
+    StrideDetector::State tmp(state);
+    --state;
+    return tmp;
   }
 
 }
