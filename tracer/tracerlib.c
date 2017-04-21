@@ -1,9 +1,8 @@
 #include "tracerlib.h"
-#include "tracerdefs.h"
 
 #include <stdio.h>
 
-void loopEvent(uint8_t type) {
+void loopEvent(event_t type) {
   switch (type) {
     case LOOP_ENTRY:
     case LOOP_ITER:
@@ -17,13 +16,14 @@ void loopEvent(uint8_t type) {
   }
 }
 
-void memoryEvent(uint8_t type, void *addr, uint64_t pc) {
+void memoryEvent(event_t type, void *addr, uint64_t pc) {
+  mem_event_t me = {pc, (uint64_t) addr};
+
   switch (type) {
     case LOAD:
     case STORE:
       fwrite(&type, sizeof(type), 1, stdout);
-      fwrite(&pc, sizeof(pc), 1, stdout);
-      fwrite(&addr, sizeof(addr), 1, stdout);
+      fwrite(&me, sizeof(me), 1, stdout);
       break;
 
     default:

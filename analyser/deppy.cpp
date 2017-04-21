@@ -7,13 +7,12 @@
 using namespace analyser;
 
 int main() {
-  uint64_t pc;
-  uint64_t addr;
-  uint8_t eventId;
+  mem_event_t memEvent;
+  event_t event;
   std::stack<StrideLoop> loopStack;
 
-  while (std::cin.read((char*)&eventId, sizeof(eventId))) {
-    switch (eventId) {
+  while (std::cin.read(reinterpret_cast<char*>(&event), sizeof(event))) {
+    switch (event) {
       case LOOP_ENTRY:
         if (loopStack.empty()) {
           loopStack.emplace(); // Top level loop
@@ -37,16 +36,11 @@ int main() {
 
       case LOAD:
       case STORE:
-        std::cin.read((char*)&pc, sizeof(pc));
-        std::cin.read((char*)&addr, sizeof(addr));
+        std::cin.read(reinterpret_cast<char*>(&memEvent), sizeof(memEvent));
         if (!loopStack.empty()) {
-          loopStack.top().memoryRef(pc, addr, eventId == STORE);
+          loopStack.top().memoryRef(memEvent.pc, memEvent.addr, event == STORE);
         }
         break;
-
-      default:
-        std::cerr << "Invalid event\n";
-        return 1;
     }
   }
 }
