@@ -67,6 +67,10 @@ namespace analyser {
     return state == State::weakStride || state == State::strongStride;
   }
 
+  uint64_t StrideDetector::getStride() const {
+    return stride;
+  }
+
   // An accessed addr is part of the stride iff addr = base + stride * n for some n in N
   // that is, iff (addr - base) / stride = n for some n in N
   bool StrideDetector::isInLearnedStride(const uint64_t addr) const {

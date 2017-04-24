@@ -9,19 +9,21 @@ namespace analyser {
   public:
     StrideDetector();
 
-    // Add a memory reference to this stride detector. Returns true if the reference is part of the
-    // current stride.
+    // Add a memory access to the stride detector. Returns true iff the address can be represented
+    // with the learned stride.
     bool addAddress(const uint64_t addr);
 
     // Returns true iff the StrideDetector is in an accepting state.
     bool isAccepting() const;
 
-    // Get the stride distance of the currently detected stride.
-    uint64_t getStride() const { return stride; }
+    // Get the stride distance of the learned stride.
+    uint64_t getStride() const;
 
+    // Finite state machine state.
     enum class State { start, firstObs, strideLnd, weakStride, strongStride };
 
   private:
+    // Return true iff the supplied address can be represented with the learned stride.
     bool isInLearnedStride(const uint64_t addr) const;
 
     uint64_t base, stride, limit;
