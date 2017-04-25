@@ -12,7 +12,7 @@ namespace analyser {
       return other.numDependences(*this);
     }
 
-    auto low = std::max(base, other.base);
+    auto low = other.base;
     auto high = std::min(limit, other.limit);
 
     if (high < low) {
