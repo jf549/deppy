@@ -1,12 +1,20 @@
 #include "StrideLoop.h"
 #include <lib/event.h>
 
+#include <chrono>
+#include <ctime>
 #include <iostream>
+#include <iomanip>
 #include <stack>
 
 using namespace analyser;
 
 int main() {
+#ifdef BENCHMARK
+  auto c_start = std::clock();
+  auto t_start = std::chrono::steady_clock::now();
+#endif
+
   mem_event_t memEvent;
   event_t event;
   std::stack<StrideLoop> loopStack;
@@ -47,6 +55,15 @@ int main() {
         break;
     }
   }
+
+#ifdef BENCHMARK
+  auto c_end = std::clock();
+  auto t_end = std::chrono::steady_clock::now();
+  std::cerr << std::fixed << std::setprecision(2) << "CPU time used: "
+            << 1000.0 * (c_end - c_start) / CLOCKS_PER_SEC << " ms\n"
+            << "Time passed: "
+            << std::chrono::duration<double, std::milli>(t_end-t_start).count() << " ms\n";
+#endif
 
   return 0;
 }
