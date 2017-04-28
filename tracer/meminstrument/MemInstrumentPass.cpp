@@ -14,10 +14,10 @@ namespace {
   // An LLVM pass to instrument memory events (load and store instruction)
   struct MemInstrumentPass : public FunctionPass {
     static char ID;
-    std::error_code ec;
-    raw_fd_ostream debugInfo;
+    static std::error_code ec;
+    static raw_fd_ostream debugInfo;
 
-    MemInstrumentPass() : FunctionPass(ID), debugInfo("debug_info", ec, sys::fs::F_RW) {
+    MemInstrumentPass() : FunctionPass(ID) {
       if (ec) {
         errs() << "Failed to open debug_info file\n";
       }
@@ -75,4 +75,6 @@ namespace {
 }
 
 char MemInstrumentPass::ID = 0;
+std::error_code MemInstrumentPass::ec;
+raw_fd_ostream MemInstrumentPass::debugInfo("debug_info", ec, sys::fs::F_RW);
 static RegisterPass<MemInstrumentPass> tmp("instrument-mem", "Instrument loads and stores");
