@@ -8,12 +8,12 @@
 static char *buf;
 static char *ptr;
 
-void serialise_uint64(uint64_t val);
-void serialise_event(event_t val);
-void init_buf(void);
-void flush_buf(void);
+void serialiseUint64(uint64_t val);
+void serialiseEvent(event_t val);
+void initBuf(void);
+void flushBuf(void);
 
-void serialise_uint64(uint64_t val) {
+void serialiseUint64(uint64_t val) {
   ptr[0] = (char) (val >> 56);
   ptr[1] = (char) (val >> 48);
   ptr[2] = (char) (val >> 40);
@@ -25,12 +25,12 @@ void serialise_uint64(uint64_t val) {
   ptr += 8;
 }
 
-void serialise_event(event_t val) {
+void serialiseEvent(event_t val) {
   ptr[0] = (char) val;
   ++ptr;
 }
 
-void init_buf(void) {
+void initBuf(void) {
   buf = (char *) malloc(BUFLEN);
   ptr = buf;
   if (!buf) {
@@ -39,29 +39,29 @@ void init_buf(void) {
   }
 }
 
-void flush_buf(void) {
-  size_t to_write = (size_t)(ptr - buf);
-  while (to_write > 0) {
-    ssize_t res = write(2, buf, to_write);
+void flushBuf(void) {
+  size_t toWrite = (size_t)(ptr - buf);
+  while (toWrite > 0) {
+    ssize_t res = write(2, buf, toWrite);
     if (res < 0) {
       printf("Failed to write buffer\n");
       exit(1);
     }
-    to_write -= (size_t)res;
+    toWrite -= (size_t)res;
   }
   ptr = buf;
 }
 
 void loopEvent(event_t event) {
-  if (!buf) init_buf();
-  serialise_event(event);
-  if (ptr - buf > BUFLEN - 17) flush_buf();
+  if (!buf) initBuf();
+  serialiseEvent(event);
+  if (ptr - buf > BUFLEN - 17) flushBuf();
 }
 
 void memoryEvent(event_t event, void *addr, uint64_t pc) {
-  if (!buf) init_buf();
-  serialise_event(event);
-  serialise_uint64(pc);
-  serialise_uint64((uint64_t)addr);
-  if (ptr - buf > BUFLEN - 17) flush_buf();
+  if (!buf) initBuf();
+  serialiseEvent(event);
+  serialiseUint64(pc);
+  serialiseUint64((uint64_t)addr);
+  if (ptr - buf > BUFLEN - 17) flushBuf();
 }
