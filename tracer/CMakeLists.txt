@@ -1,6 +1,7 @@
 add_library(tracer tracerlib.c)
 
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/instrument.sh DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/ccinst DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 find_package(LLVM REQUIRED CONFIG)
 
