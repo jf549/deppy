@@ -1,0 +1,9 @@
+#!/bin/bash
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+clang -g -c -emit-llvm -Xclang -disable-llvm-optzns -O3 $2 -o - $3 |
+opt -loop-simplify |
+opt -load $DIR/loopinstrument/LoopInstrumentPass.dylib -instrument-loops |
+opt -load $DIR/meminstrument/MemInstrumentPass.dylib -instrument-mem |
+clang -c -x ir -O3 -o "${3%.*}.o" -
