@@ -39,24 +39,27 @@ void initBuf(void) {
     exit(1);
   }
 
+  atexit(flushBuf); // Flush the buffer on program exit
   ptr = buf;
 }
 
 void flushBuf(void) {
-  size_t toWrite = (size_t) (ptr - buf);
+  if (buf) {
+    size_t toWrite = (size_t) (ptr - buf);
 
-  while (toWrite > 0) {
-    ssize_t res = write(2, buf, toWrite);
+    while (toWrite > 0) {
+      ssize_t res = write(2, buf, toWrite);
 
-    if (res < 0) {
-      printf("Failed to write buffer\n");
-      exit(1);
+      if (res < 0) {
+        printf("Failed to write buffer\n");
+        exit(1);
+      }
+
+      toWrite -= (size_t) res;
     }
 
-    toWrite -= (size_t) res;
+    ptr = buf;
   }
-
-  ptr = buf;
 }
 
 void loopEvent(event_t event) {
