@@ -40,7 +40,7 @@ void init_buf(void) {
 }
 
 void flush_buf(void) {
-  write(2, buf, ptr - buf);
+  write(2, buf, (size_t)(ptr - buf));
   ptr = buf;
 }
 
