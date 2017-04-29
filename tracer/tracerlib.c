@@ -34,13 +34,21 @@ void init_buf(void) {
   buf = (char *) malloc(BUFLEN);
   ptr = buf;
   if (!buf) {
-    printf("Failed to allocate buffer!");
+    printf("Failed to allocate buffer\n");
     exit(1);
   }
 }
 
 void flush_buf(void) {
-  write(2, buf, (size_t)(ptr - buf));
+  size_t to_write = (size_t)(ptr - buf);
+  while (to_write > 0) {
+    ssize_t res = write(2, buf, to_write);
+    if (res < 0) {
+      printf("Failed to write buffer\n");
+      exit(1);
+    }
+    to_write -= (size_t)res;
+  }
   ptr = buf;
 }
 
