@@ -11,8 +11,8 @@ using namespace analyser;
 
 int main() {
 #ifdef BENCHMARK
-  auto c_start = std::clock();
-  auto t_start = std::chrono::steady_clock::now();
+  auto cStart = std::clock();
+  auto tStart = std::chrono::steady_clock::now();
 #endif
 
   mem_event_t memEvent;
@@ -57,12 +57,12 @@ int main() {
   }
 
 #ifdef BENCHMARK
-  auto c_end = std::clock();
-  auto t_end = std::chrono::steady_clock::now();
+  auto cEnd = std::clock();
+  auto tEnd = std::chrono::steady_clock::now();
   std::cerr << std::fixed << std::setprecision(2) << "CPU time used: "
-            << 1000.0 * (c_end - c_start) / CLOCKS_PER_SEC << " ms\n"
+            << 1000.0 * (cEnd - cStart) / CLOCKS_PER_SEC << " ms\n"
             << "Time passed: "
-            << std::chrono::duration<double, std::milli>(t_end-t_start).count() << " ms\n";
+            << std::chrono::duration<double, std::milli>(tEnd - tStart).count() << " ms\n";
 #endif
 
   return 0;
