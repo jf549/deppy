@@ -75,13 +75,12 @@ namespace analyser {
         auto& historyPoints = ith->second;
 
         for (const auto& point : itp->second) {
-          bool merged = false;
+          auto merged = false;
 
           for (auto& historyPoint : historyPoints) {
             // Merge equivalent accesses occuring in subsequent iterations.
             if (point.pc == historyPoint.pc) {
               assert(point.isWrite == historyPoint.isWrite);
-              historyPoint.numAccesses += point.numAccesses;
               historyPoint.iterLastAccessed = iter;
               merged = true;
               break;
@@ -126,7 +125,7 @@ namespace analyser {
 
   // On a memory reference, R, check the killed bit of R. If killed, report a loop-independent
   // dependence. Otherwise, store R in PendingPointTable. If R is a write, set its killed bit.
-  void PointLoop::addMemoryRef(uint64_t pc, uint64_t addr, bool isWrite, unsigned int numAccesses) {
+  void PointLoop::addMemoryRef(uint64_t pc, uint64_t addr, bool isWrite) {
     auto& points = pendingPointTable[addr];
 
     for (const auto& point : points) {
@@ -136,7 +135,7 @@ namespace analyser {
     }
 
     if (!killedAddrs.count(addr)) {
-      points.emplace_back(Point{ pc, numAccesses, iter, isWrite });
+      points.emplace_back(Point{ pc, iter, isWrite });
 
       if (isWrite) {
         killedAddrs.insert(addr);

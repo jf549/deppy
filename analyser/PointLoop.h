@@ -39,7 +39,7 @@ namespace analyser {
     virtual void doDependenceCheck() override;
     virtual void doIteration() override;
     virtual void doPropagation() override;
-    virtual void addMemoryRef(uint64_t pc, uint64_t addr, bool isWrite, unsigned int numAccesses) override;
+    virtual void addMemoryRef(uint64_t pc, uint64_t addr, bool isWrite) override;
 
     PointLoop* const parent;
   };

@@ -7,7 +7,7 @@ namespace analyser {
 
   struct Point {
     uint64_t pc;
-    unsigned int numAccesses, iterLastAccessed;
+    unsigned int iterLastAccessed;
     bool isWrite;
   };
 

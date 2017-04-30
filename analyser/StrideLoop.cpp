@@ -156,7 +156,7 @@ namespace analyser {
   // On a memory access, R, check the killed bit of R. If not killed, store R in either
   // pendingPointTable or pendingStrideTable based on the result of the stride detection of R. If R
   // is a write, set its killed bit.
-  void StrideLoop::addMemoryRef(uint64_t pc, uint64_t addr, bool isWrite, unsigned int numAccesses) {
+  void StrideLoop::addMemoryRef(uint64_t pc, uint64_t addr, bool isWrite) {
     // Check for loop independent dependences.
     if (pendingPointTable.count(addr)) {
       for (const auto& point : pendingPointTable.at(addr)) {
@@ -181,10 +181,10 @@ namespace analyser {
 
       if (detector.addAddress(addr)) { // R is part of a stride.
         pendingStrideTable[pc].emplace_back(
-          Stride{ addr, detector.getStride(), addr, numAccesses, iter, isWrite });
+          Stride{ addr, detector.getStride(), addr, 1, iter, isWrite });
 
       } else { // R is a point.
-        pendingPointTable[addr].emplace_back(Point{ pc, numAccesses, iter, isWrite });
+        pendingPointTable[addr].emplace_back(Point{ pc, iter, isWrite });
       }
 
       if (isWrite) {

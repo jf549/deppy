@@ -17,14 +17,14 @@ namespace analyser {
     void terminate();
 
     // Call each time a memory access event is seen inside this loop.
-    void memoryRef(uint64_t pc, uint64_t addr, bool isWrite, unsigned int numAccesses = 1);
+    void memoryRef(uint64_t pc, uint64_t addr, bool isWrite);
 
   private:
     // Using NVI design pattern.
     virtual void doDependenceCheck() = 0;
     virtual void doIteration() = 0;
     virtual void doPropagation() = 0;
-    virtual void addMemoryRef(uint64_t pc, uint64_t addr, bool isWrite, unsigned int numAccesses) = 0;
+    virtual void addMemoryRef(uint64_t pc, uint64_t addr, bool isWrite) = 0;
   };
 
 }
