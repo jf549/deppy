@@ -1,7 +1,9 @@
 #include "tracerlib.h"
 
-#include <stdlib.h>
+#include <stddef.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 #define BUFLEN 4096
@@ -15,15 +17,8 @@ void initBuf(void);
 void flushBuf(void);
 
 void serialiseUint64(uint64_t val) {
-  ptr[0] = (char) (val >> 56);
-  ptr[1] = (char) (val >> 48);
-  ptr[2] = (char) (val >> 40);
-  ptr[3] = (char) (val >> 32);
-  ptr[4] = (char) (val >> 24);
-  ptr[5] = (char) (val >> 16);
-  ptr[6] = (char) (val >> 8);
-  ptr[7] = (char) val;
-  ptr += 8;
+  memcpy(ptr, &val, sizeof(val));
+  ptr += sizeof(val);
 }
 
 void serialiseEvent(event_t val) {
@@ -45,17 +40,17 @@ void initBuf(void) {
 
 void flushBuf(void) {
   if (buf) {
-    size_t toWrite = (size_t) (ptr - buf);
+    ptrdiff_t toWrite = ptr - buf;
 
     while (toWrite > 0) {
-      ssize_t res = write(2, buf, toWrite);
+      ssize_t res = write(2, buf, (size_t) toWrite);
 
       if (res < 0) {
         printf("Failed to write buffer\n");
         exit(1);
       }
 
-      toWrite -= (size_t) res;
+      toWrite -= res;
     }
 
     ptr = buf;
