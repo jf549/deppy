@@ -5,6 +5,14 @@
 
 namespace analyser {
 
+#ifdef EXTBENCH
+
+void reportDependence(uint64_t, uint64_t, bool, bool, unsigned int, unsigned int) {}
+
+void reportIndependentDependence(uint64_t, uint64_t, bool, bool, unsigned int) {}
+
+#else
+
   void reportDependence(uint64_t srcPc, uint64_t sinkPc, bool srcIsWrite, bool sinkIsWrite,
                         unsigned int srcIter, unsigned int sinkIter) {
     std::cout << "Loop-carried "
@@ -62,5 +70,7 @@ namespace analyser {
 
     std::cout << ") iteration: " << iter << '\n';
   }
+
+#endif
 
 }
