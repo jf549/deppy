@@ -6,8 +6,13 @@
 #include <string.h>
 #include <unistd.h>
 
-#define BUFLEN 4096
-#define OUT_FD 1
+#define BUFLEN (64 * BUFSIZ)
+
+#ifdef EXTBENCH
+#define OUT_FD STDERR_FILENO
+#else
+#define OUT_FD STDOUT_FILENO
+#endif
 
 static char *buf;
 static char *ptr;

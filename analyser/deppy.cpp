@@ -1,6 +1,7 @@
 #include "StrideLoop.h"
 #include <lib/event.h>
 
+#include <unistd.h>
 #include <array>
 #include <chrono>
 #include <ctime>
@@ -8,7 +9,7 @@
 #include <iomanip>
 #include <stack>
 
-#define BUFLEN 4096
+#define BUFLEN (64 * BUFSIZ)
 
 using namespace analyser;
 
@@ -18,21 +19,20 @@ int main() {
   auto tStart = std::chrono::steady_clock::now();
 #endif
 
+  uint64_t pc, addr;
+  ssize_t num;
+  event_t event;
   std::stack<StrideLoop> loopStack;
   std::array<char, BUFLEN> buf;
   auto front = begin(buf);
   auto back = cend(buf);
 
-  // Increase IO performance
-  std::ios_base::sync_with_stdio(false); // Prevents use of C IO functions
-  std::cin.tie(nullptr); // Prevents in/out interaction with console
-
-  while (std::cin.read(front, buf.size()) || std::cin.gcount()) {
-    auto it = front;
-    auto end = front + std::cin.gcount();
+  while ((num = read(STDIN_FILENO, front, buf.size())) > 0) {
+    auto it = front; // Pointer to next byte to process
+    auto end = front + num; // Pointer to one past the last valid byte
 
     while (it != end) {
-      event_t event = static_cast<event_t>(*it++);
+      event = static_cast<event_t>(*it++);
 
       switch (event) {
         case LOOP_ENTRY:
@@ -58,25 +58,35 @@ int main() {
 
         case LOAD:
         case STORE:
+          // If there are fewer remaining bytes in buffer than the size of a memory event, then
+          // first copy remaining bytes at the end of the buffer to the front and then refill the
+          // buffer by reading from stdin. A circular buffer would provide better performance, but
+          // IO is far from a bottleneck in the profiler, so the simple solution wins.
           if (end - it < 16) {
             end = std::copy(it, end, front);
             it = front;
-            std::cin.read(end, back - end);
-            end += std::cin.gcount();
-            if (end - it < 16) {
-              std::cerr << "Did not receive memory event\n";
-              return 1;
-            }
+
+            do {
+              num = read(STDIN_FILENO, end, static_cast<size_t>(back - end));
+
+              if (num <= 0) {
+                std::cerr << "Did not receive memory event\n";
+                return 1;
+              }
+
+              end += num;
+
+            } while (end - it < 16);
           }
-          {
-            uint64_t pc, addr;
-            memcpy(&pc, it, sizeof(pc));
-            it += sizeof(pc);
-            memcpy(&addr, it, sizeof(addr));
-            it += sizeof(addr);
-            if (!loopStack.empty()) {
-              loopStack.top().memoryRef(pc, addr, event == STORE);
-            }
+
+          memcpy(&pc, it, sizeof(pc));
+          it += sizeof(pc);
+
+          memcpy(&addr, it, sizeof(addr));
+          it += sizeof(addr);
+
+          if (!loopStack.empty()) {
+            loopStack.top().memoryRef(pc, addr, event == STORE);
           }
           break;
       }
