@@ -7,6 +7,7 @@
 #include <unistd.h>
 
 #define BUFLEN 4096
+#define OUT_FD 1
 
 static char *buf;
 static char *ptr;
@@ -43,7 +44,7 @@ void flushBuf(void) {
     ptrdiff_t toWrite = ptr - buf;
 
     while (toWrite > 0) {
-      ssize_t res = write(2, buf, (size_t) toWrite);
+      ssize_t res = write(OUT_FD, buf, (size_t) toWrite);
 
       if (res < 0) {
         printf("Failed to write buffer\n");
