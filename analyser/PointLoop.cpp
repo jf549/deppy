@@ -20,19 +20,20 @@ namespace analyser {
       if (!killedAddrs.count(addr)) {
         const auto& childPoints = pair.second;
         auto& points = pendingPointTable[addr];
-        points.insert(end(points), begin(childPoints), end(childPoints));
+        points.insert(cend(points), cbegin(childPoints), cend(childPoints));
       }
     }
 
-    killedAddrs.insert(begin(childLoop.killedAddrs), end(childLoop.killedAddrs));
+    killedAddrs.insert(cbegin(childLoop.killedAddrs), cend(childLoop.killedAddrs));
   }
 
-  // TODO: try lookup instead
-  void PointLoop::findPointPointDependences() {
+  void PointLoop::findPointPointDependences() const {
     auto itp = cbegin(pendingPointTable);
     auto ith = cbegin(historyPointTable);
+    const auto endp = cend(pendingPointTable);
+    const auto endh = cend(historyPointTable);
 
-    while (itp != cend(pendingPointTable) && ith != cend(historyPointTable)) {
+    while (itp != endp && ith != endh) {
       if (itp->first < ith->first) {
         ++itp;
 
@@ -56,11 +57,12 @@ namespace analyser {
 
   void PointLoop::mergePointTables() {
     auto itp = cbegin(pendingPointTable);
-    auto endp = cend(pendingPointTable);
     auto ith = begin(historyPointTable);
+    const auto endp = cend(pendingPointTable);
+    const auto endh = end(historyPointTable);
 
     while (itp != endp) {
-      if (ith == end(historyPointTable)) {
+      if (ith == endh) {
         historyPointTable.insert(itp, endp);
         break;
 
