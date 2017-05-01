@@ -5,7 +5,7 @@
 #include "Point.h"
 
 #include <cstdint>
-#include <unordered_map>
+#include <map>
 #include <set>
 #include <vector>
 
@@ -20,7 +20,7 @@ namespace analyser {
     explicit PointLoop(PointLoop* parent);
 
   protected:
-    using PointTableT = std::unordered_map<uint64_t /* addr */, std::vector<Point>>;
+    using PointTableT = std::map<uint64_t /* addr */, std::vector<Point>>;
 
     // Propagate dependence history from a child of this loop upon termination of the child.
     void propagate(const PointLoop& childLoop);
