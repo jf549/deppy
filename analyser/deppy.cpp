@@ -3,11 +3,14 @@
 
 #include <unistd.h>
 #include <array>
-#include <chrono>
-#include <ctime>
 #include <iostream>
 #include <iomanip>
 #include <stack>
+
+#ifdef BENCHMARK
+#include <chrono>
+#include <ctime>
+#endif
 
 #define BUFLEN (64 * BUFSIZ)
 
