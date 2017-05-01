@@ -24,8 +24,8 @@ int main() {
   event_t event;
   std::stack<StrideLoop> loopStack;
   std::array<char, BUFLEN> buf;
-  auto front = begin(buf);
-  auto back = cend(buf);
+  const auto front = begin(buf);
+  const auto back = cend(buf);
 
   while ((num = read(STDIN_FILENO, front, buf.size())) > 0) {
     auto it = front; // Pointer to next byte to process
