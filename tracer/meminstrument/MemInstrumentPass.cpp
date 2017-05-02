@@ -46,7 +46,7 @@ namespace {
           debugInfo << '\n';
         }
       } else {
-        errs() << "Failed to get debugging information\n";
+        //errs() << "Failed to get debugging information\n";
       }
     }
 
