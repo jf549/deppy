@@ -91,7 +91,7 @@ namespace analyser {
 
           // If no equivalent access has occurred before, add this one to the history.
           if (!merged) {
-            historyPoints.emplace_back(std::move(point));
+            historyPoints.push_back(std::move(point));
           }
         }
 
