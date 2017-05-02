@@ -6,7 +6,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#define BUFLEN (64 * BUFSIZ)
+#define BUFLEN (32 * BUFSIZ)
 
 #ifdef EXTBENCH
 #define OUT_FD STDERR_FILENO

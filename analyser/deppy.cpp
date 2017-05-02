@@ -12,7 +12,7 @@
 #include <ctime>
 #endif
 
-#define BUFLEN (64 * BUFSIZ)
+#define BUFLEN (32 * BUFSIZ)
 
 using namespace analyser;
 
