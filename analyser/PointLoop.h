@@ -20,7 +20,7 @@ namespace analyser {
     explicit PointLoop(PointLoop* parent);
 
   protected:
-    using PointTableT = std::map<uint64_t /* addr */, std::vector<Point>>;
+    using PointTableT = std::map<AddrT, std::vector<Point>>;
 
     // Propagate dependence history from a child of this loop upon termination of the child.
     void propagate(const PointLoop& childLoop);
@@ -32,14 +32,14 @@ namespace analyser {
     void mergePointTables();
 
     PointTableT pendingPointTable, historyPointTable;
-    std::set<uint64_t> killedAddrs;
+    std::set<AddrT> killedAddrs;
     unsigned int iter;
 
   private:
     virtual void doDependenceCheck() override;
     virtual void doIteration() override;
     virtual void doPropagation() const override;
-    virtual void addMemoryRef(uint64_t pc, uint64_t addr, bool isWrite) override;
+    virtual void addMemoryRef(PcT pc, AddrT addr, bool isWrite) override;
 
     PointLoop* const parent;
   };
