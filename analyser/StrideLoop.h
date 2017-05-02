@@ -23,7 +23,7 @@ namespace analyser {
     using StrideTableT = std::map<uint64_t /* pc */, std::vector<Stride>>;
 
     // Propagate dependence history from a child of this loop upon termination of the child.
-    void propagate(StrideLoop& childLoop);
+    void propagate(const StrideLoop& childLoop);
 
     void findStrideStrideDependences();
 
@@ -41,7 +41,7 @@ namespace analyser {
 
   private:
     virtual void doDependenceCheck() override;
-    virtual void doPropagation() override;
+    virtual void doPropagation() const override;
     virtual void addMemoryRef(uint64_t pc, uint64_t addr, bool isWrite) override;
 
     StrideLoop* const parent;

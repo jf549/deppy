@@ -10,10 +10,10 @@ namespace analyser {
     if (other.base < base) {
       return other.numDependences(*this);
     }
+
     mpz_class low0 = static_cast<unsigned long>(base);
     mpz_class dist0 = static_cast<unsigned long>(stride);
     mpz_class dist1 = static_cast<unsigned long>(other.stride);
-
     mpz_class low = static_cast<unsigned long>(other.base);
     mpz_class high = static_cast<unsigned long>(std::min(limit, other.limit));
 

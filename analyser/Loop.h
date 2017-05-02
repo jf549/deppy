@@ -23,7 +23,7 @@ namespace analyser {
     // Using NVI design pattern.
     virtual void doDependenceCheck() = 0;
     virtual void doIteration() = 0;
-    virtual void doPropagation() = 0;
+    virtual void doPropagation() const = 0;
     virtual void addMemoryRef(uint64_t pc, uint64_t addr, bool isWrite) = 0;
   };
 

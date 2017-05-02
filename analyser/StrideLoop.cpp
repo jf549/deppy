@@ -1,6 +1,8 @@
 #include "StrideLoop.h"
 #include "Logger.h"
 
+#include <list>
+
 namespace analyser {
 
   StrideLoop::StrideLoop() : PointLoop(), parent(nullptr) {}
@@ -10,36 +12,43 @@ namespace analyser {
   // Merge the history tables of childLoop with the pending tables of this loop (its parent). To
   // handle loop-independent dependences, if a memory address in the history tables of childLoop is
   // killed by the parent of L, this killed history is not propagated.
-  void StrideLoop::propagate(StrideLoop& childLoop) {
-    for (auto& pair : childLoop.historyStrideTable) {
-      auto& strides = pair.second;
-
-      for (auto& stride : strides) {
-        auto eliminated = false;
+  void StrideLoop::propagate(const StrideLoop& childLoop) {
+    for (const auto& pair : childLoop.historyStrideTable) {
+      for (const auto& s : pair.second) {
+        std::list<Stride> worklist{ s };
 
         for (const auto addr : killedAddrs) {
-          if (stride.isDependent(addr)) {
-            if (stride.base == stride.limit) {
-              eliminated = true;
-              break;
+          auto it = begin(worklist);
 
-            } else if (addr == stride.base) {
-              stride.base += stride.stride;
+          while (it != end(worklist)) {
+            auto& stride = *it;
 
-            } else if (addr == stride.limit) {
-              stride.limit -= stride.stride;
+            if (stride.isDependent(addr)) {
+              if (stride.base == stride.limit) {
+                it = worklist.erase(it);
+                continue;
 
-            } else {
-              strides.emplace_back(Stride{ addr + stride.stride, stride.stride, stride.limit,
+              } else if (addr == stride.base) {
+                stride.base += stride.stride;
+
+              } else if (addr == stride.limit) {
+                stride.limit -= stride.stride;
+
+              } else {
+                worklist.push_back(Stride{ addr + stride.stride, stride.stride, stride.limit,
                                            stride.numAccesses, stride.iterLastAccessed,
                                            stride.isWrite });
-              stride.limit = addr - stride.stride;
+                stride.limit = addr - stride.stride;
+              }
             }
+
+            ++it;
           }
         }
 
-        if (!eliminated) {
-          pendingStrideTable[pair.first].emplace_back(std::move(stride));
+        if (worklist.size()) {
+          auto& strides = pendingStrideTable[pair.first];
+          strides.insert(cbegin(strides), cbegin(worklist), cend(worklist));
         }
       }
     }
@@ -98,7 +107,7 @@ namespace analyser {
   }
 
   void StrideLoop::mergeStride(std::vector<Stride>& strides, const Stride& toMerge) const {
-    bool merged = false;
+    auto merged = false;
 
     for (auto& s : strides) {
       if (toMerge.isWrite == s.isWrite && toMerge.stride == s.stride
@@ -147,7 +156,7 @@ namespace analyser {
     }
   }
 
-  void StrideLoop::doPropagation() {
+  void StrideLoop::doPropagation() const {
     if (parent) {
       parent->propagate(*this);
     }
@@ -180,11 +189,11 @@ namespace analyser {
       auto& detector = detectors[pc]; // Default constructs detector if it doesn't exist.
 
       if (detector.addAddress(addr)) { // R is part of a stride.
-        pendingStrideTable[pc].emplace_back(
+        pendingStrideTable[pc].push_back(
           Stride{ addr, detector.getStride(), addr, 1, iter, isWrite });
 
       } else { // R is a point.
-        pendingPointTable[addr].emplace_back(Point{ pc, iter, isWrite });
+        pendingPointTable[addr].push_back(Point{ pc, iter, isWrite });
       }
 
       if (isWrite) {

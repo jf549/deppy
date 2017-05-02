@@ -119,7 +119,7 @@ namespace analyser {
   }
 
   // To handle loop nests, propagate the history table of L to the parent of L, if it exists.
-  void PointLoop::doPropagation() {
+  void PointLoop::doPropagation() const {
     if (parent) {
       parent->propagate(*this);
     }
