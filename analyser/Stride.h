@@ -15,6 +15,9 @@ namespace analyser {
     // Returns true iff there is a dependence between this stride and the supplied point.
     bool isDependent(uint64_t addr) const;
 
+    // Attempt to merge an overlapping stride with this one. Returns true if successful.
+    bool merge(const Stride& other);
+
     uint64_t base, stride, limit;
     unsigned int numAccesses, iterLastAccessed;
     bool isWrite;

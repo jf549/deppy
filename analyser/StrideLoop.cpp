@@ -110,12 +110,8 @@ namespace analyser {
     auto merged = false;
 
     for (auto& s : strides) {
-      if (toMerge.isWrite == s.isWrite && toMerge.stride == s.stride
-          && toMerge.base >= s.base - s.stride && toMerge.limit <= s.limit + s.stride) {
-        s.base = std::min(s.base, toMerge.base);
-        s.limit = std::max(s.limit, toMerge.limit);
-        s.iterLastAccessed = iter;
-        s.numAccesses += toMerge.numAccesses;
+      if (toMerge.base >= s.base - s.stride && toMerge.limit <= s.limit + s.stride
+          && s.merge(toMerge)) {
         merged = true;
         break;
       }

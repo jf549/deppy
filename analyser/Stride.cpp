@@ -45,4 +45,29 @@ namespace analyser {
     return (base <= addr) && (addr <= limit) && ((addr - base) % stride == 0);
   }
 
+  bool Stride::merge(const Stride& other) {
+    if (isWrite == other.isWrite && stride == other.stride
+        && (base < other.base ? other.base - base : base - other.base) % stride == 0) {
+
+      if (other.base < base) {
+        base = other.base;
+      }
+
+      if (other.limit > limit) {
+        limit = other.limit;
+      }
+
+      if (other.iterLastAccessed > iterLastAccessed) {
+        iterLastAccessed = other.iterLastAccessed;
+      }
+
+      numAccesses += other.numAccesses;
+
+      return true;
+
+    }
+
+    return false;
+  }
+
 }
