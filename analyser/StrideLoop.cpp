@@ -12,6 +12,7 @@ namespace analyser {
   // Merge the history tables of childLoop with the pending tables of this loop (its parent). To
   // handle loop-independent dependences, if a memory address in the history tables of childLoop is
   // killed by the parent of L, this killed history is not propagated.
+  // TODO use interval tree
   void StrideLoop::propagate(const StrideLoop& childLoop) {
     for (const auto& pair : childLoop.historyStrideTable) {
       for (const auto& s : pair.second) {
@@ -35,7 +36,7 @@ namespace analyser {
                 stride.limit -= stride.stride;
 
               } else {
-                worklist.push_back(Stride{ addr + stride.stride, stride.stride, stride.limit,
+                worklist.push_front(Stride{ addr + stride.stride, stride.stride, stride.limit,
                                            stride.numAccesses, stride.iterLastAccessed,
                                            stride.isWrite });
                 stride.limit = addr - stride.stride;
