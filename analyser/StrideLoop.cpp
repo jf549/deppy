@@ -1,7 +1,6 @@
 #include "StrideLoop.h"
 #include "Logger.h"
 
-
 namespace analyser {
 
   StrideLoop::StrideLoop() : PointLoop(), parent(nullptr) {}
@@ -59,13 +58,15 @@ namespace analyser {
   // TODO improve efficiency of these three functions by using interval tree.
   void StrideLoop::findStrideStrideDependences() {
     for (const auto& pair : pendingStrideTable) {
-      for (const auto& historyPair : historyStrideTable) {
-        for (const auto& stride : pair.second) {
-          for (const auto& historyStride : historyPair.second) {
-            if ((stride.isWrite || historyStride.isWrite) && stride.numDependences(historyStride)) {
-              reportDependence(historyPair.first, pair.first, historyStride.isWrite,
-                stride.isWrite, historyStride.iterLastAccessed, iter);
-            }
+      for (const auto& stride : pair.second) {
+        std::vector<IntervalT> dependences;
+        intervalTree.findOverlapping(stride.base, stride.limit, dependences);
+
+        for (const auto& interval : dependences) {
+          const auto historyStride = interval.value;
+          if ((stride.isWrite || historyStride->isWrite) && stride.numDependences(*historyStride)) {
+            reportDependence(0/*hmm*/, pair.first, historyStride->isWrite, stride.isWrite,
+                             historyStride->iterLastAccessed, iter);
           }
         }
       }
@@ -144,6 +145,16 @@ namespace analyser {
       pendingPointTable.clear();
       pendingStrideTable.clear();
     }
+
+    std::vector<IntervalT> intervals;
+
+    for (const auto& pair : historyStrideTable) {
+      for (const auto& stride : pair.second) {
+        intervals.push_back(IntervalT(stride.base, stride.limit, &stride));
+      }
+    }
+
+    intervalTree = IntervalTreeT(intervals);
   }
 
   void StrideLoop::doPropagation() const {

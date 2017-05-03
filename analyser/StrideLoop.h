@@ -9,6 +9,8 @@
 #include <list>
 #include <map>
 
+#include <ext/intervaltree/IntervalTree.h>
+
 namespace analyser {
 
   class StrideLoop : public PointLoop {
@@ -22,6 +24,9 @@ namespace analyser {
   protected:
     using StrideListT = std::list<Stride>;
     using StrideTableT = std::map<PcT, StrideListT>;
+
+    using IntervalT = Interval<const Stride*, AddrT>;
+    using IntervalTreeT = IntervalTree<const Stride*, AddrT>;
 
     // Propagate dependence history from a child of this loop upon termination of the child.
     void propagate(const StrideLoop& childLoop);
@@ -39,6 +44,7 @@ namespace analyser {
 
     StrideTableT pendingStrideTable, historyStrideTable;
     std::map<PcT, StrideDetector> detectors;
+    IntervalTreeT intervalTree;
 
   private:
     virtual void doDependenceCheck() override;
