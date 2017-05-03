@@ -32,7 +32,7 @@ namespace analyser {
 
     void findPointStrideDependences();
 
-    void mergeStride(StrideListT& strides, const Stride& toMerge) const;
+    void mergeStride(StrideListT& strides, const Stride& toMerge);
 
     // Merge the pendingStrideTable into the historyStrideTable.
     void mergeStrideTables();

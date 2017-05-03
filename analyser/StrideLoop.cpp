@@ -1,7 +1,6 @@
 #include "StrideLoop.h"
 #include "Logger.h"
 
-#include <list>
 
 namespace analyser {
 
@@ -107,20 +106,14 @@ namespace analyser {
     }
   }
 
-  void StrideLoop::mergeStride(StrideListT& strides, const Stride& toMerge) const {
-    auto merged = false;
-
+  void StrideLoop::mergeStride(StrideListT& strides, const Stride& toMerge) {
     for (auto& s : strides) {
-      if (toMerge.base >= s.base - s.stride && toMerge.limit <= s.limit + s.stride
-          && s.merge(toMerge)) {
-        merged = true;
-        break;
+      if (s.merge(toMerge)) {
+        return;
       }
     }
 
-    if (!merged) {
-      strides.push_back(toMerge);
-    }
+    strides.push_back(toMerge);
   }
 
   void StrideLoop::mergeStrideTables() {

@@ -2,6 +2,7 @@
 
 #include <gmpxx.h>
 
+#include <cassert>
 #include <algorithm>
 
 namespace analyser {
@@ -46,7 +47,13 @@ namespace analyser {
   }
 
   bool Stride::merge(const Stride& other) {
+    auto extendedBase = base - stride;
+    auto extendedLimit = limit + stride;
+    assert(extendedBase < base);
+    assert(extendedLimit > limit);
+
     if (isWrite == other.isWrite && stride == other.stride
+        && other.limit >= extendedBase && other.base <= extendedLimit
         && (base < other.base ? other.base - base : base - other.base) % stride == 0) {
 
       if (other.base < base) {
