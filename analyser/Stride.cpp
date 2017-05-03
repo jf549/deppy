@@ -64,7 +64,6 @@ namespace analyser {
       numAccesses += other.numAccesses;
 
       return true;
-
     }
 
     return false;

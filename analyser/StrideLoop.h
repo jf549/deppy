@@ -6,8 +6,8 @@
 #include "StrideDetector.h"
 
 #include <cstdint>
+#include <list>
 #include <map>
-#include <vector>
 
 namespace analyser {
 
@@ -20,7 +20,8 @@ namespace analyser {
     StrideLoop(StrideLoop* parent);
 
   protected:
-    using StrideTableT = std::map<PcT, std::vector<Stride>>;
+    using StrideListT = std::list<Stride>;
+    using StrideTableT = std::map<PcT, StrideListT>;
 
     // Propagate dependence history from a child of this loop upon termination of the child.
     void propagate(const StrideLoop& childLoop);
@@ -31,7 +32,7 @@ namespace analyser {
 
     void findPointStrideDependences();
 
-    void mergeStride(std::vector<Stride>& strides, const Stride& toMerge) const;
+    void mergeStride(StrideListT& strides, const Stride& toMerge) const;
 
     // Merge the pendingStrideTable into the historyStrideTable.
     void mergeStrideTables();

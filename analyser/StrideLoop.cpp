@@ -16,7 +16,7 @@ namespace analyser {
   void StrideLoop::propagate(const StrideLoop& childLoop) {
     for (const auto& pair : childLoop.historyStrideTable) {
       for (const auto& s : pair.second) {
-        std::list<Stride> worklist{ s };
+        StrideListT worklist{ s };
 
         for (const auto addr : killedAddrs) {
           auto it = begin(worklist);
@@ -49,7 +49,7 @@ namespace analyser {
 
         if (worklist.size()) {
           auto& strides = pendingStrideTable[pair.first];
-          strides.insert(cbegin(strides), cbegin(worklist), cend(worklist));
+          strides.splice(cend(strides), worklist);
         }
       }
     }
@@ -107,7 +107,7 @@ namespace analyser {
     }
   }
 
-  void StrideLoop::mergeStride(std::vector<Stride>& strides, const Stride& toMerge) const {
+  void StrideLoop::mergeStride(StrideListT& strides, const Stride& toMerge) const {
     auto merged = false;
 
     for (auto& s : strides) {
