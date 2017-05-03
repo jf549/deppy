@@ -52,9 +52,9 @@ namespace analyser {
     assert(extendedBase < base);
     assert(extendedLimit > limit);
 
-    if (isWrite == other.isWrite && stride == other.stride
-        && other.limit >= extendedBase && other.base <= extendedLimit
+    if (stride == other.stride && other.limit >= extendedBase && other.base <= extendedLimit
         && (base < other.base ? other.base - base : base - other.base) % stride == 0) {
+      assert(isWrite == other.isWrite);
 
       if (other.base < base) {
         base = other.base;
