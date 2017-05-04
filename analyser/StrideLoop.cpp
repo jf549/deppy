@@ -75,14 +75,18 @@ namespace analyser {
 
   void StrideLoop::findStridePointDependences() const {
     for (const auto& pair : pendingPointTable) {
-      for (const auto& historyPair : historyStrideTable) {
-        for (const auto& historyStride : historyPair.second) {
-          if (historyStride.isDependent(pair.first)) {
-            for (const auto& point : pair.second) {
-              if (point.isWrite || historyStride.isWrite) {
-                reportDependence(historyPair.first, point.pc, historyStride.isWrite,
-                  point.isWrite, historyStride.iterLastAccessed, iter);
-              }
+      const auto addr = pair.first;
+      std::vector<IntervalT> dependences;
+      intervalTree.findOverlapping(addr, addr, dependences);
+
+      for (const auto& interval : dependences) {
+        const auto stridePtr = interval.value;
+
+        if (stridePtr->isDependent(addr)) {
+          for (const auto& point : pair.second) {
+            if (point.isWrite || stridePtr->isWrite) {
+              reportDependence(0, point.pc, stridePtr->isWrite, point.isWrite,
+                               stridePtr->iterLastAccessed, iter);
             }
           }
         }
