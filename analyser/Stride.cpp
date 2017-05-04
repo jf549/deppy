@@ -1,6 +1,6 @@
 #include "Stride.h"
 
-#include <gmpxx.h>
+#include <gmp.h>
 
 #include <cassert>
 #include <algorithm>
@@ -12,33 +12,48 @@ namespace analyser {
       return other.numDependences(*this);
     }
 
-    mpz_class low0 = static_cast<unsigned long>(base);
-    mpz_class dist0 = static_cast<unsigned long>(stride);
-    mpz_class dist1 = static_cast<unsigned long>(other.stride);
-    mpz_class low = static_cast<unsigned long>(other.base);
-    mpz_class high = static_cast<unsigned long>(std::min(limit, other.limit));
+    mpz_t dist0, dist1, result;
+
+    uint64_t low = other.base;
+    uint64_t high = std::min(limit, other.limit);
 
     if (high < low) {
       return 0;
     }
 
-    mpz_class delta = (dist0 - ((low - low0) % dist0)) % dist0;
+    uint64_t delta = (stride - ((low - base) % stride)) % stride;
 
-    if (delta % gcd(dist0, dist1) != 0) {
+    mpz_init_set_ui(dist0, stride);
+
+    unsigned long gcd = mpz_gcd_ui(NULL, dist0, other.stride);
+
+    if (delta % gcd != 0) {
+      mpz_clear(dist0);
       return 0;
     }
 
-    mpz_class gcd, x, y;
-    mpz_gcdext(gcd.get_mpz_t(), x.get_mpz_t(), y.get_mpz_t(), dist0.get_mpz_t(), dist1.get_mpz_t());
+    mpz_init(result);
+    mpz_init_set_ui(dist1, other.stride);
 
-    mpz_class lcm = (dist0 / gcd) * dist1; // gcd divides both; more efficient to divide only one
-    mpz_class offset = (dist1 * y * delta / gcd + lcm) % lcm;
-    mpz_class result = (high - low + 1 - (offset + 1) + lcm) / lcm;
+    mpz_gcdext(dist0, result, NULL, dist1, dist0);
 
-    if (result < 0) {
+    mpz_mul_ui(dist1, dist1, stride/gcd); // gcd divides both; more efficient to divide only one
+
+    mpz_mul_ui(result, result, delta/gcd);
+    mpz_mul_ui(result, result, other.stride);
+    mpz_add(result, result, dist1);
+    mpz_mod(result, result, dist1);
+    mpz_ui_sub(result, high - low, result);
+    mpz_add(result, result, dist1);
+    mpz_tdiv_q(result, result, dist1);
+
+    if (mpz_cmp_si(result, 0) <= 0) {
+      mpz_clears(dist0, dist1, result, NULL);
       return 0;
     } else {
-      return result.get_ui();
+      unsigned long res = mpz_get_ui(result);
+      mpz_clears(dist0, dist1, result, NULL);
+      return res;
     }
   }
 

@@ -7,7 +7,7 @@ add_library(Analyser
             StrideDetector.cpp
             StrideLoop.cpp)
 
-target_link_libraries(Analyser gmpxx gmp)
+target_link_libraries(Analyser gmp)
 
 add_executable(deppy deppy.cpp)
 
