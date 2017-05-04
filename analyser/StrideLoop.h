@@ -31,11 +31,11 @@ namespace analyser {
     // Propagate dependence history from a child of this loop upon termination of the child.
     void propagate(const StrideLoop& childLoop);
 
-    void findStrideStrideDependences();
+    void findStrideStrideDependences() const;
 
-    void findStridePointDependences();
+    void findStridePointDependences() const;
 
-    void findPointStrideDependences();
+    void findPointStrideDependences() const;
 
     void mergeStride(StrideListT& strides, const Stride& toMerge);
 

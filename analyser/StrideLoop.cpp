@@ -56,7 +56,7 @@ namespace analyser {
   }
 
   // TODO improve efficiency of these three functions by using interval tree.
-  void StrideLoop::findStrideStrideDependences() {
+  void StrideLoop::findStrideStrideDependences() const {
     for (const auto& pair : pendingStrideTable) {
       for (const auto& stride : pair.second) {
         std::vector<IntervalT> dependences;
@@ -73,7 +73,7 @@ namespace analyser {
     }
   }
 
-  void StrideLoop::findStridePointDependences() {
+  void StrideLoop::findStridePointDependences() const {
     for (const auto& pair : pendingPointTable) {
       for (const auto& historyPair : historyStrideTable) {
         for (const auto& historyStride : historyPair.second) {
@@ -90,7 +90,7 @@ namespace analyser {
     }
   }
 
-  void StrideLoop::findPointStrideDependences() {
+  void StrideLoop::findPointStrideDependences() const {
     for (const auto& pair : pendingStrideTable) {
       for (const auto& historyPair : historyPointTable) {
         for (const auto& stride : pair.second) {
