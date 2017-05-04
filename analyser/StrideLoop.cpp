@@ -55,7 +55,6 @@ namespace analyser {
     PointLoop::propagate(childLoop);
   }
 
-  // TODO improve efficiency of these three functions by using interval tree.
   void StrideLoop::findStrideStrideDependences() const {
     for (const auto& pair : pendingStrideTable) {
       for (const auto& stride : pair.second) {
@@ -94,6 +93,7 @@ namespace analyser {
     }
   }
 
+  // TODO improve efficiency of this function by using interval tree.
   void StrideLoop::findPointStrideDependences() const {
     for (const auto& pair : pendingStrideTable) {
       for (const auto& historyPair : historyPointTable) {
@@ -101,8 +101,8 @@ namespace analyser {
           if (stride.isDependent(historyPair.first)) {
             for (const auto& historyPoint : historyPair.second) {
               if (stride.isWrite || historyPoint.isWrite) {
-                reportDependence(historyPoint.pc, pair.first, historyPoint.isWrite,
-                  stride.isWrite, historyPoint.iterLastAccessed, iter);
+                reportDependence(historyPoint.pc, pair.first, historyPoint.isWrite, stride.isWrite,
+                                 historyPoint.iterLastAccessed, iter);
               }
             }
           }
@@ -111,20 +111,33 @@ namespace analyser {
     }
   }
 
-  void StrideLoop::mergeStride(StrideListT& strides, const Stride& toMerge) {
-    for (auto& s : strides) {
-      if (s.merge(toMerge)) {
-        return;
-      }
-    }
-
-    strides.push_back(toMerge);
-  }
-
   void StrideLoop::mergeStrideTables() {
     for (const auto& pair : pendingStrideTable) {
+      auto& strideList = historyStrideTable[pair.first];
+      std::vector<IntervalT> intervals;
+
+      for (auto& stride : strideList) {
+        intervals.push_back(IntervalT(stride.base, stride.limit, &stride));
+      }
+
+      IntervalTreeT tree(intervals);
+
       for (const auto& stride : pair.second) {
-        mergeStride(historyStrideTable[pair.first], stride);
+        auto merged = false;
+        std::vector<IntervalT> overlapping;
+
+        tree.findOverlapping(stride.base, stride.limit, overlapping);
+
+        for (auto& interval : overlapping) {
+          if (interval.value->merge(stride)) {
+            merged = true;
+            break;
+          }
+        }
+
+        if (!merged) {
+          strideList.push_back(stride);
+        }
       }
     }
   }
@@ -152,8 +165,8 @@ namespace analyser {
 
     std::vector<IntervalT> intervals;
 
-    for (const auto& pair : historyStrideTable) {
-      for (const auto& stride : pair.second) {
+    for (auto& pair : historyStrideTable) {
+      for (auto& stride : pair.second) {
         intervals.push_back(IntervalT(stride.base, stride.limit, &stride));
       }
     }

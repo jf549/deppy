@@ -25,8 +25,8 @@ namespace analyser {
     using StrideListT = std::list<Stride>;
     using StrideTableT = std::map<PcT, StrideListT>;
 
-    using IntervalT = Interval<const Stride*, AddrT>;
-    using IntervalTreeT = IntervalTree<const Stride*, AddrT>;
+    using IntervalT = Interval<Stride*, AddrT>;
+    using IntervalTreeT = IntervalTree<Stride*, AddrT>;
 
     // Propagate dependence history from a child of this loop upon termination of the child.
     void propagate(const StrideLoop& childLoop);

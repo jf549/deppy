@@ -62,13 +62,7 @@ namespace analyser {
   }
 
   bool Stride::merge(const Stride& other) {
-    auto extendedBase = base - stride;
-    auto extendedLimit = limit + stride;
-    assert(extendedBase < base);
-    assert(extendedLimit > limit);
-
-    if (stride == other.stride && other.limit >= extendedBase && other.base <= extendedLimit
-        && (base < other.base ? other.base - base : base - other.base) % stride == 0) {
+    if ((base < other.base ? other.base - base : base - other.base) % stride == 0) {
       assert(isWrite == other.isWrite);
 
       if (other.base < base) {
