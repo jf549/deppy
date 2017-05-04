@@ -80,7 +80,7 @@ namespace analyser {
           if (historyStride.isDependent(pair.first)) {
             for (const auto& point : pair.second) {
               if (point.isWrite || historyStride.isWrite) {
-                reportDependence(historyPair.first, pair.first, historyStride.isWrite,
+                reportDependence(historyPair.first, point.pc, historyStride.isWrite,
                   point.isWrite, historyStride.iterLastAccessed, iter);
               }
             }
@@ -97,7 +97,7 @@ namespace analyser {
           if (stride.isDependent(historyPair.first)) {
             for (const auto& historyPoint : historyPair.second) {
               if (stride.isWrite || historyPoint.isWrite) {
-                reportDependence(historyPair.first, pair.first, historyPoint.isWrite,
+                reportDependence(historyPoint.pc, pair.first, historyPoint.isWrite,
                   stride.isWrite, historyPoint.iterLastAccessed, iter);
               }
             }
