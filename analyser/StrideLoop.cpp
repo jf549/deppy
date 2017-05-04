@@ -113,31 +113,36 @@ namespace analyser {
 
   void StrideLoop::mergeStrideTables() {
     for (const auto& pair : pendingStrideTable) {
-      auto& strideList = historyStrideTable[pair.first];
-      std::vector<IntervalT> intervals;
+      if (historyStrideTable.count(pair.first)) {
+        auto& strideList = historyStrideTable.at(pair.first);
+        std::vector<IntervalT> intervals;
 
-      for (auto& stride : strideList) {
-        intervals.push_back(IntervalT(stride.base, stride.limit, &stride));
-      }
+        for (auto& stride : strideList) {
+          intervals.push_back(IntervalT(stride.base, stride.limit, &stride));
+        }
 
-      IntervalTreeT tree(intervals);
+        IntervalTreeT tree(intervals);
 
-      for (const auto& stride : pair.second) {
-        auto merged = false;
-        std::vector<IntervalT> overlapping;
+        for (const auto& stride : pair.second) {
+          auto merged = false;
+          std::vector<IntervalT> overlapping;
 
-        tree.findOverlapping(stride.base, stride.limit, overlapping);
+          tree.findOverlapping(stride.base, stride.limit, overlapping);
 
-        for (auto& interval : overlapping) {
-          if (interval.value->merge(stride)) {
-            merged = true;
-            break;
+          for (auto& interval : overlapping) {
+            if (interval.value->merge(stride)) {
+              merged = true;
+              break;
+            }
+          }
+
+          if (!merged) {
+            strideList.push_back(stride);
           }
         }
 
-        if (!merged) {
-          strideList.push_back(stride);
-        }
+      } else {
+        historyStrideTable.insert(pair);
       }
     }
   }
