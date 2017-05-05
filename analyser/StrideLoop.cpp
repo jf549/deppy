@@ -64,7 +64,7 @@ namespace analyser {
         for (const auto& interval : dependences) {
           const auto historyStride = interval.value;
           if ((stride.isWrite || historyStride->isWrite) && stride.numDependences(*historyStride)) {
-            reportDependence(0/*hmm*/, pair.first, historyStride->isWrite, stride.isWrite,
+            reportDependence(0, pair.first, historyStride->isWrite, stride.isWrite,
                              historyStride->iterLastAccessed, iter);
           }
         }
@@ -188,7 +188,7 @@ namespace analyser {
   // On a memory access, R, check the killed bit of R. If not killed, store R in either
   // pendingPointTable or pendingStrideTable based on the result of the stride detection of R. If R
   // is a write, set its killed bit.
-  void StrideLoop::addMemoryRef(uint64_t pc, uint64_t addr, bool isWrite) {
+  void StrideLoop::addMemoryRef(PcT pc, AddrT addr, bool isWrite) {
     // Check for loop independent dependences.
     if (pendingPointTable.count(addr)) {
       for (const auto& point : pendingPointTable.at(addr)) {

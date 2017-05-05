@@ -15,7 +15,7 @@ namespace analyser {
     doPropagation();
   }
 
-  void Loop::memoryRef(uint64_t pc, uint64_t addr, bool isWrite) {
+  void Loop::memoryRef(PcT pc, AddrT addr, bool isWrite) {
     addMemoryRef(pc, addr, isWrite);
   }
 

@@ -5,7 +5,6 @@
 #include "Stride.h"
 #include "StrideDetector.h"
 
-#include <cstdint>
 #include <list>
 #include <map>
 

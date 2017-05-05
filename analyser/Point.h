@@ -1,12 +1,12 @@
 #ifndef POINT_H
 #define POINT_H
 
-#include <cstdint>
+#include "types.h"
 
 namespace analyser {
 
   struct Point {
-    uint64_t pc;
+    PcT pc;
     unsigned int iterLastAccessed;
     bool isWrite;
   };

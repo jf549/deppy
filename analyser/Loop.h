@@ -1,15 +1,12 @@
 #ifndef LOOP_H
 #define LOOP_H
 
-#include <cstdint>
+#include "types.h"
 
 namespace analyser {
 
   class Loop {
   public:
-    using AddrT = uint64_t;
-    using PcT = uint64_t;
-
     Loop();
     virtual ~Loop();
 

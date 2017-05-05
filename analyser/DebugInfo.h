@@ -1,7 +1,8 @@
 #ifndef DEBUG_INFO_H
 #define DEBUG_INFO_H
 
-#include <cstdint>
+#include "types.h"
+
 #include <string>
 
 namespace analyser {
@@ -11,7 +12,7 @@ namespace analyser {
     int lineNum, colNum;
   };
 
-  DebugInfo getDebugInfo(const uint64_t pc);
+  DebugInfo getDebugInfo(const PcT pc);
 
 }
 

@@ -4,7 +4,6 @@
 #include "Loop.h"
 #include "Point.h"
 
-#include <cstdint>
 #include <map>
 #include <set>
 #include <vector>

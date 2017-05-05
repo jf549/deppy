@@ -127,7 +127,7 @@ namespace analyser {
 
   // On a memory reference, R, check the killed bit of R. If killed, report a loop-independent
   // dependence. Otherwise, store R in PendingPointTable. If R is a write, set its killed bit.
-  void PointLoop::addMemoryRef(uint64_t pc, uint64_t addr, bool isWrite) {
+  void PointLoop::addMemoryRef(PcT pc, AddrT addr, bool isWrite) {
     auto& points = pendingPointTable[addr];
 
     for (const auto& point : points) {

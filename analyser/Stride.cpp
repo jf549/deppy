@@ -7,21 +7,21 @@
 
 namespace analyser {
 
-  uint64_t Stride::numDependences(const Stride& other) const {
+  AddrT Stride::numDependences(const Stride& other) const {
     if (other.base < base) {
       return other.numDependences(*this);
     }
 
     mpz_t dist0, dist1, result;
 
-    uint64_t low = other.base;
-    uint64_t high = std::min(limit, other.limit);
+    auto low = other.base;
+    auto high = std::min(limit, other.limit);
 
     if (high < low) {
       return 0;
     }
 
-    uint64_t delta = (stride - ((low - base) % stride)) % stride;
+    auto delta = (stride - ((low - base) % stride)) % stride;
 
     mpz_init_set_ui(dist0, stride);
 
@@ -57,7 +57,7 @@ namespace analyser {
     }
   }
 
-  bool Stride::isDependent(uint64_t addr) const {
+  bool Stride::isDependent(AddrT addr) const {
     return (base <= addr) && (addr <= limit) && ((addr - base) % stride == 0);
   }
 
