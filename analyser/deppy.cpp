@@ -6,6 +6,7 @@
 #include <array>
 #include <iostream>
 #include <iomanip>
+#include <sstream>
 #include <stack>
 #include <thread>
 
@@ -15,16 +16,23 @@
 #endif
 
 #define BUFLEN (32 * BUFSIZ)
-#define NUM_THREADS 7
+#define USE_STRIDES 1
 
 using namespace analyser;
 
+static unsigned NUM_THREADS = 7;
+
 template<typename T> using Buf = lib::BoundedBuffer<T>;
-template<typename T> using Bufs = std::array<Buf<T>, NUM_THREADS>;
+template<typename T> using Bufs = std::vector<Buf<T>>;
 using MemEventT = std::pair<PcT, AddrT>;
+using LoopT = std::conditional_t<USE_STRIDES, StrideLoop, PointLoop>;
 
 int eventDispatch(Bufs<event_t>& eventBufs, Bufs<MemEventT>& memEventBufs);
+
+template<typename T>
 void eventHandler(Buf<event_t>& eventBuf, Buf<MemEventT>& memEventBuf);
+
+template<typename T>
 int sd3();
 
 int eventDispatch(Bufs<event_t>& eventBufs, Bufs<MemEventT>& memEventBufs) {
@@ -90,11 +98,12 @@ int eventDispatch(Bufs<event_t>& eventBufs, Bufs<MemEventT>& memEventBufs) {
   return 0;
 }
 
+template<typename T>
 void eventHandler(Buf<event_t>& eventBuf, Buf<MemEventT>& memEventBuf) {
   PcT pc;
   AddrT addr;
   event_t event;
-  std::stack<StrideLoop> loopStack;
+  std::stack<T> loopStack;
 
   while (true) {
     event = eventBuf.consume();
@@ -136,11 +145,12 @@ void eventHandler(Buf<event_t>& eventBuf, Buf<MemEventT>& memEventBuf) {
   }
 }
 
+template<typename T>
 int sd3() {
   uint64_t pc, addr;
   ssize_t num;
   event_t event;
-  std::stack<StrideLoop> loopStack;
+  std::stack<T> loopStack;
   std::array<char, BUFLEN> buf;
   const auto front = begin(buf);
   const auto back = cend(buf);
@@ -214,7 +224,7 @@ int sd3() {
   return 0;
 }
 
-int main() {
+int main(int argc, const char** argv) {
 #ifdef BENCHMARK
   auto cStart = std::clock();
   auto tStart = std::chrono::steady_clock::now();
@@ -222,27 +232,37 @@ int main() {
 
   int res = 0;
 
-#if NUM_THREADS > 1
-  Bufs<event_t> eventBufs;
-  Bufs<MemEventT> memEventBufs;
-  std::vector<std::thread> threads;
-
-  for (size_t i = 0; i < NUM_THREADS; ++i) {
-    threads.emplace_back(eventHandler, std::ref(eventBufs[i]), std::ref(memEventBufs[i]));
+  if (argc > 1) {
+    std::istringstream iss(argv[1]);
+    iss >> NUM_THREADS;
   }
 
-  res = eventDispatch(eventBufs, memEventBufs);
+  std::cerr << "Running with " << NUM_THREADS << " threads\n";
+  std::cerr << (USE_STRIDES ? "Compressing memory access\n" : "Not compressesing memory access\n");
 
-  for (auto& buf : eventBufs) {
-    buf.produce(SENTINAL);
-  }
 
-  for (auto& t : threads) {
-    t.join();
+  if (NUM_THREADS > 1) {
+    Bufs<event_t> eventBufs(NUM_THREADS);
+    Bufs<MemEventT> memEventBufs(NUM_THREADS);
+    std::vector<std::thread> threads;
+
+    for (size_t i = 0; i < NUM_THREADS; ++i) {
+      threads.emplace_back(eventHandler<LoopT>, std::ref(eventBufs[i]), std::ref(memEventBufs[i]));
+    }
+
+    res = eventDispatch(eventBufs, memEventBufs);
+
+    for (auto& buf : eventBufs) {
+      buf.produce(SENTINAL);
+    }
+
+    for (auto& t : threads) {
+      t.join();
+    }
+
+  } else {
+    res = sd3<LoopT>();
   }
-#else
-  res = sd3();
-#endif
 
 #ifdef BENCHMARK
   auto cEnd = std::clock();
