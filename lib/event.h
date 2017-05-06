@@ -10,7 +10,8 @@ typedef enum event {
   LOOP_ITER,
   LOOP_EXIT,
   LOAD,
-  STORE
+  STORE,
+  SENTINAL
 } event_t;
 
 #ifdef __cplusplus
