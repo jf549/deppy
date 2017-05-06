@@ -15,7 +15,7 @@
 #endif
 
 #define BUFLEN (32 * BUFSIZ)
-#define NUM_THREADS 2
+#define NUM_THREADS 7
 
 using namespace analyser;
 
@@ -222,7 +222,7 @@ int main() {
 
   int res = 0;
 
-#ifdef NUM_THREADS
+#if NUM_THREADS > 1
   Bufs<event_t> eventBufs;
   Bufs<MemEventT> memEventBufs;
   std::vector<std::thread> threads;
