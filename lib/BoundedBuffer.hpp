@@ -19,10 +19,10 @@ namespace lib {
     BoundedBuffer(const BoundedBuffer&) = delete; // Prevent copying
     BoundedBuffer& operator=(const BoundedBuffer&) = delete; // Prevent assignment
 
-    void produce(ParamT item) {
+    void produce(ParamT element) {
       std::unique_lock<std::mutex> lock(mutex);
       notFull.wait(lock, [this]{ return unread < buf.capacity(); });
-      buf.push_front(item);
+      buf.push_front(element);
       ++unread;
       lock.unlock();
       notEmpty.notify_one();
@@ -31,17 +31,17 @@ namespace lib {
     ValueT consume() {
       std::unique_lock<std::mutex> lock(mutex);
       notEmpty.wait(lock, [this]{ return unread > 0; });
-      ValueT res = buf[--unread];
+      ValueT element = buf[--unread];
       lock.unlock();
       notFull.notify_one();
-      return res;
+      return element;
     }
 
   private:
     SizeT unread;
     BufferT buf;
-    std::mutex mutex;
     std::condition_variable notFull, notEmpty;
+    std::mutex mutex;
   };
 
 }
