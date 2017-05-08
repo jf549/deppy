@@ -17,10 +17,10 @@ namespace lib {
     explicit BoundedBuffer(SizeT capacity = 10000) : unread(0), buf(capacity) {}
 
     BoundedBuffer(const BoundedBuffer&) = delete; // Prevent copying
-    BoundedBuffer& operator=(const BoundedBuffer&) = delete;
+    BoundedBuffer& operator=(const BoundedBuffer&) = delete; // Prevent assignment
 
     void produce(ParamT item) {
-      std::unique_lock<std::mutex> lock(m);
+      std::unique_lock<std::mutex> lock(mutex);
       notFull.wait(lock, [this]{ return unread < buf.capacity(); });
       buf.push_front(item);
       ++unread;
@@ -29,7 +29,7 @@ namespace lib {
     }
 
     ValueT consume() {
-      std::unique_lock<std::mutex> lock(m);
+      std::unique_lock<std::mutex> lock(mutex);
       notEmpty.wait(lock, [this]{ return unread > 0; });
       ValueT res = buf[--unread];
       lock.unlock();
@@ -39,8 +39,8 @@ namespace lib {
 
   private:
     SizeT unread;
-    boost::circular_buffer<T> buf;
-    std::mutex m;
+    BufferT buf;
+    std::mutex mutex;
     std::condition_variable notFull, notEmpty;
   };
 

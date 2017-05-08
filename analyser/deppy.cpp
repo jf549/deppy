@@ -18,9 +18,9 @@
 #define BUFLEN (32 * BUFSIZ)
 #define USE_STRIDES 1
 
-using namespace analyser;
-
 static unsigned NUM_THREADS = 7;
+
+using namespace analyser;
 
 template<typename T> using Buf = lib::BoundedBuffer<T>;
 template<typename T> using Bufs = std::vector<Buf<T>>;
@@ -61,10 +61,6 @@ int eventDispatch(Bufs<event_t>& eventBufs, Bufs<MemEventT>& memEventBufs) {
 
         case LOAD:
         case STORE:
-          // If there are fewer remaining bytes in buffer than the size of a memory event, then
-          // first copy remaining bytes at the end of the buffer to the front and then refill the
-          // buffer by reading from stdin. A circular buffer would provide better performance, but
-          // IO is far from a bottleneck in the profiler, so the simple solution wins.
           if (end - it < 16) {
             end = std::copy(it, end, front);
             it = front;
@@ -240,13 +236,12 @@ int main(int argc, const char** argv) {
   std::cerr << "Running with " << NUM_THREADS << " threads\n";
   std::cerr << (USE_STRIDES ? "Compressing memory access\n" : "Not compressesing memory access\n");
 
-
   if (NUM_THREADS > 1) {
     Bufs<event_t> eventBufs(NUM_THREADS);
     Bufs<MemEventT> memEventBufs(NUM_THREADS);
     std::vector<std::thread> threads;
 
-    for (size_t i = 0; i < NUM_THREADS; ++i) {
+    for (unsigned i = 0; i < NUM_THREADS; ++i) {
       threads.emplace_back(eventHandler<LoopT>, std::ref(eventBufs[i]), std::ref(memEventBufs[i]));
     }
 
