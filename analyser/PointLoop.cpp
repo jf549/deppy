@@ -1,8 +1,6 @@
 #include "PointLoop.h"
 #include "Logger.h"
 
-#include <cassert>
-
 namespace analyser {
 
   PointLoop::PointLoop() : Loop(), iter(0), parent(nullptr) {}
@@ -82,7 +80,6 @@ namespace analyser {
           for (auto& historyPoint : historyPoints) {
             // Merge equivalent accesses occuring in subsequent iterations.
             if (point.pc == historyPoint.pc) {
-              assert(point.isWrite == historyPoint.isWrite);
               historyPoint.iterLastAccessed = iter;
               merged = true;
               break;

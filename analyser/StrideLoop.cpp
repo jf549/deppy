@@ -93,7 +93,6 @@ namespace analyser {
     }
   }
 
-  // TODO improve efficiency of this function by using interval tree.
   void StrideLoop::findPointStrideDependences() const {
     for (const auto& pair : pendingStrideTable) {
       for (const auto& historyPair : historyPointTable) {
@@ -198,7 +197,6 @@ namespace analyser {
       }
     }
 
-    // TODO inefficient, use interval tree
     for (const auto& pair : pendingStrideTable) {
       for (const auto& stride : pair.second) {
         if (stride.isDependent(addr) && (stride.isWrite || isWrite)) {
