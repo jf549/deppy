@@ -232,8 +232,7 @@ namespace analyser {
       auto& detector = detectors[pc]; // Default constructs detector if it doesn't exist.
 
       if (detector.addAddress(addr)) { // R is part of a stride.
-        pendingStrideTable[pc].push_back(
-          Stride{ addr, detector.getStride(), addr, iter, isWrite });
+        pendingStrideTable[pc].push_back(Stride{ addr, detector.getStride(), addr, iter, isWrite });
 
       } else { // R is a point.
         pendingPointTable[addr].push_back(Point{ pc, iter, isWrite });
