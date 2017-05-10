@@ -10,9 +10,17 @@ namespace analyser {
   // Merge the history tables of childLoop with the pending tables of this loop (its parent). To
   // handle loop-independent dependences, if a memory address in the history tables of childLoop is
   // killed by the parent of L, this killed history is not propagated.
-  // TODO use interval tree
   void StrideLoop::propagate(const StrideLoop& childLoop) {
     for (const auto& pair : childLoop.historyStrideTable) {
+      auto& strideList = pendingStrideTable[pair.first];
+      std::vector<IntervalT> intervals;
+
+      for (auto& stride : strideList) {
+        intervals.push_back(IntervalT(stride.base, stride.limit, &stride));
+      }
+
+      IntervalTreeT tree(intervals);
+
       for (const auto& s : pair.second) {
         StrideListT worklist{ s };
 
@@ -45,8 +53,23 @@ namespace analyser {
         }
 
         if (worklist.size()) {
-          auto& strides = pendingStrideTable[pair.first];
-          strides.splice(cend(strides), worklist);
+          for (const auto& stride : worklist) {
+            auto merged = false;
+            std::vector<IntervalT> overlapping;
+
+            tree.findOverlapping(stride.base, stride.limit, overlapping);
+
+            for (auto& interval : overlapping) {
+              if (interval.value->merge(stride)) {
+                merged = true;
+                break;
+              }
+            }
+
+            if (!merged) {
+              strideList.push_back(stride);
+            }
+          }
         }
       }
     }
