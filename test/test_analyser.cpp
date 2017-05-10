@@ -4,13 +4,13 @@
 #include <catch.hpp>
 
 TEST_CASE("Number of stride-stride dependences is computed", "[stridedep]") {
-  analyser::Stride s0{ 20, 2, 32, true, 1, 1 };
-  analyser::Stride s1{ 21, 3, 39, true, 1, 1 };
-  analyser::Stride s2{ 13, 4, 53, true, 1, 1 };
-  analyser::Stride s3{ 99, 1, 99, true, 1, 1 };
-  analyser::Stride s4{ 33, 9999, 33, true, 1, 1 };
-  analyser::Stride s5{ 0, 2, 100, true, 1, 1 };
-  analyser::Stride s6{ 0, 1, 0, true, 1, 1 };
+  analyser::Stride s0{ 20, 2, 32, 1, true };
+  analyser::Stride s1{ 21, 3, 39, 1, true };
+  analyser::Stride s2{ 13, 4, 53, 1, true };
+  analyser::Stride s3{ 99, 1, 99, 1, true };
+  analyser::Stride s4{ 33, 9999, 33, 1, true };
+  analyser::Stride s5{ 0, 2, 100, 1, true };
+  analyser::Stride s6{ 0, 1, 0, 1, true };
 
   REQUIRE(s0.numDependences(s1) == 2);
 
@@ -53,7 +53,7 @@ TEST_CASE("Number of stride-stride dependences is computed", "[stridedep]") {
 }
 
 TEST_CASE("Stride-point dependences are computed", "[stridepointdep]") {
-  analyser::Stride s0{ 0, 2, 100, true, 1, 1 };
+  analyser::Stride s0{ 0, 2, 100, 1, true };
 
   for (unsigned i = 0; i <= 100; i += 2) {
     REQUIRE(s0.isDependent(i) == true);

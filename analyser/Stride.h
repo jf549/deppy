@@ -17,7 +17,7 @@ namespace analyser {
     bool merge(const Stride& other);
 
     AddrT base, stride, limit;
-    unsigned int numAccesses, iterLastAccessed;
+    unsigned int iterLastAccessed;
     bool isWrite;
   };
 

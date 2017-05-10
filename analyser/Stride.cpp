@@ -75,8 +75,6 @@ namespace analyser {
         iterLastAccessed = other.iterLastAccessed;
       }
 
-      numAccesses += other.numAccesses;
-
       return true;
     }
 
