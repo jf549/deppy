@@ -118,6 +118,7 @@ void eventHandler(Buf<event_t>& eventBuf, Buf<MemEventT>& memEventBuf, bool deta
             ? std::make_unique<StrideLoop>(detailedResults)
             : std::make_unique<PointLoop>(detailedResults);
           loopStack.push(std::move(ptr)); // Top level loop
+
         } else {
           auto ptr = useStrides
             ? std::make_unique<StrideLoop>(static_cast<StrideLoop*>(loopStack.top().get()),
@@ -183,6 +184,7 @@ int sd3(bool detailedResults, bool useStrides) {
               ? std::make_unique<StrideLoop>(detailedResults)
               : std::make_unique<PointLoop>(detailedResults);
             loopStack.push(std::move(ptr)); // Top level loop
+
           } else {
             auto ptr = useStrides
               ? std::make_unique<StrideLoop>(static_cast<StrideLoop*>(loopStack.top().get()),
