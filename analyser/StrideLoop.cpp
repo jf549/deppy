@@ -1,11 +1,10 @@
 #include "StrideLoop.h"
-#include "Logger.h"
 
 namespace analyser {
 
-  StrideLoop::StrideLoop() : PointLoop(), parent(nullptr) {}
+  StrideLoop::StrideLoop(bool detailedResults) : PointLoop(detailedResults), parent(nullptr) {}
 
-  StrideLoop::StrideLoop(StrideLoop* p) : PointLoop(), parent(p) {}
+  StrideLoop::StrideLoop(StrideLoop* p, bool detailedResults) : PointLoop(detailedResults), parent(p) {}
 
   // Merge the history tables of childLoop with the pending tables of this loop (its parent). To
   // handle loop-independent dependences, if a memory address in the history tables of childLoop is
@@ -86,8 +85,8 @@ namespace analyser {
         for (const auto& interval : dependences) {
           const auto historyStride = interval.value;
           if ((stride.isWrite || historyStride->isWrite) && stride.numDependences(*historyStride)) {
-            reportDependence(0, pair.first, historyStride->isWrite, stride.isWrite,
-                             historyStride->iterLastAccessed, iter);
+            results->addCarriedDependence(0, pair.first, historyStride->isWrite, stride.isWrite,
+                                          historyStride->iterLastAccessed, iter);
           }
         }
       }
@@ -106,8 +105,8 @@ namespace analyser {
         if (stridePtr->isDependent(addr)) {
           for (const auto& point : pair.second) {
             if (point.isWrite || stridePtr->isWrite) {
-              reportDependence(0, point.pc, stridePtr->isWrite, point.isWrite,
-                               stridePtr->iterLastAccessed, iter);
+              results->addCarriedDependence(0, point.pc, stridePtr->isWrite, point.isWrite,
+                                            stridePtr->iterLastAccessed, iter);
             }
           }
         }
@@ -122,8 +121,8 @@ namespace analyser {
           if (stride.isDependent(historyPair.first)) {
             for (const auto& historyPoint : historyPair.second) {
               if (stride.isWrite || historyPoint.isWrite) {
-                reportDependence(historyPoint.pc, pair.first, historyPoint.isWrite, stride.isWrite,
-                                 historyPoint.iterLastAccessed, iter);
+                results->addCarriedDependence(historyPoint.pc, pair.first, historyPoint.isWrite,
+                                              stride.isWrite, historyPoint.iterLastAccessed, iter);
               }
             }
           }
@@ -214,7 +213,7 @@ namespace analyser {
     if (pendingPointTable.count(addr)) {
       for (const auto& point : pendingPointTable.at(addr)) {
         if (point.isWrite || isWrite) {
-          reportIndependentDependence(point.pc, pc, point.isWrite, isWrite, iter);
+          results->addIndependentDependence(point.pc, pc, point.isWrite, isWrite, iter);
         }
       }
     }
@@ -222,7 +221,7 @@ namespace analyser {
     for (const auto& pair : pendingStrideTable) {
       for (const auto& stride : pair.second) {
         if (stride.isDependent(addr) && (stride.isWrite || isWrite)) {
-          reportIndependentDependence(pair.first, pc, stride.isWrite, isWrite, iter);
+          results->addIndependentDependence(pair.first, pc, stride.isWrite, isWrite, iter);
         }
       }
     }

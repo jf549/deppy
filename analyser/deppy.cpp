@@ -16,9 +16,9 @@
 #endif
 
 #define BUFLEN (32 * BUFSIZ)
-#define USE_STRIDES 1
+#define USE_STRIDES 0
 
-static unsigned NUM_THREADS = 7;
+static unsigned NUM_THREADS = 1;
 
 using namespace analyser;
 
@@ -33,7 +33,7 @@ template<typename T>
 void eventHandler(Buf<event_t>& eventBuf, Buf<MemEventT>& memEventBuf);
 
 template<typename T>
-int sd3();
+int sd3(bool detailedResults = false);
 
 int eventDispatch(Bufs<event_t>& eventBufs, Bufs<MemEventT>& memEventBufs) {
   uint64_t pc, addr;
@@ -84,9 +84,16 @@ int eventDispatch(Bufs<event_t>& eventBufs, Bufs<MemEventT>& memEventBufs) {
           memcpy(&addr, it, sizeof(addr));
           it += sizeof(addr);
 
-          auto thread = (addr >> 7) % NUM_THREADS;
-          eventBufs[thread].produce(event);
-          memEventBufs[thread].produce({ pc, addr });
+          {
+            auto thread = (addr >> 7) % NUM_THREADS;
+            eventBufs[thread].produce(event);
+            memEventBufs[thread].produce({ pc, addr });
+          }
+
+          break;
+
+        case SENTINAL:
+          break;
       }
     }
   }
@@ -142,12 +149,15 @@ void eventHandler(Buf<event_t>& eventBuf, Buf<MemEventT>& memEventBuf) {
 }
 
 template<typename T>
-int sd3() {
+int sd3(bool detailedResults) {
   uint64_t pc, addr;
   ssize_t num;
   event_t event;
   std::stack<T> loopStack;
   std::array<char, BUFLEN> buf;
+  std::unique_ptr<DependenceResults> results(detailedResults
+    ? std::unique_ptr<DependenceResults>{ std::make_unique<DetailedDependenceResults>() }
+    : std::unique_ptr<DependenceResults>{ std::make_unique<BasicDependenceResults>() } );
   const auto front = begin(buf);
   const auto back = cend(buf);
 
@@ -161,9 +171,9 @@ int sd3() {
       switch (event) {
         case LOOP_ENTRY:
           if (loopStack.empty()) {
-            loopStack.emplace(); // Top level loop
+            loopStack.emplace(detailedResults); // Top level loop
           } else {
-            loopStack.emplace(&loopStack.top()); // Nested loop
+            loopStack.emplace(&loopStack.top(), detailedResults); // Nested loop
           }
           break;
 
@@ -175,7 +185,7 @@ int sd3() {
 
         case LOOP_EXIT:
           if (!loopStack.empty()) {
-            loopStack.top().terminate();
+            results->merge(loopStack.top().terminate());
             loopStack.pop();
           }
           break;
@@ -213,9 +223,14 @@ int sd3() {
             loopStack.top().memoryRef(pc, addr, event == STORE);
           }
           break;
+
+        case SENTINAL:
+          break;
       }
     }
   }
+
+  results->print();
 
   return 0;
 }

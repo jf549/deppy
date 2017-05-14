@@ -15,10 +15,10 @@ namespace analyser {
   class StrideLoop : public PointLoop {
   public:
     // Construct a top level loop.
-    StrideLoop();
+    StrideLoop(bool detailedResults = false);
 
     // Construct a nested loop by providing a pointer to its parent loop.
-    StrideLoop(StrideLoop* parent);
+    StrideLoop(StrideLoop* parent, bool detailedResults = false);
 
   protected:
     using StrideListT = std::list<Stride>;

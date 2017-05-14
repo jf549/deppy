@@ -1,6 +1,6 @@
 add_library(Analyser
             DebugInfo.cpp
-            Logger.cpp
+            DependenceResults.cpp
             Loop.cpp
             PointLoop.cpp
             Stride.cpp

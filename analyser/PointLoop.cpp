@@ -1,11 +1,10 @@
 #include "PointLoop.h"
-#include "Logger.h"
 
 namespace analyser {
 
-  PointLoop::PointLoop() : Loop(), iter(0), parent(nullptr) {}
+  PointLoop::PointLoop(bool detailedResults) : Loop(detailedResults), iter(0), parent(nullptr) {}
 
-  PointLoop::PointLoop(PointLoop* p) : Loop(), iter(0), parent(p) {}
+  PointLoop::PointLoop(PointLoop* p, bool detailedResults) : Loop(detailedResults), iter(0), parent(p) {}
 
   // Propagation is done by merging the history table of L with the pending table of the parent of
   // L. To handle loop-independent dependences, if a memory address in the history tables of L is
@@ -42,8 +41,8 @@ namespace analyser {
         for (const auto& point : itp->second) {
           for (const auto& historyPoint : ith->second) {
             if (historyPoint.isWrite || point.isWrite) {
-              reportDependence(historyPoint.pc, point.pc, historyPoint.isWrite, point.isWrite,
-                               historyPoint.iterLastAccessed, iter);
+              results->addCarriedDependence(historyPoint.pc, point.pc, historyPoint.isWrite,
+                                            point.isWrite, historyPoint.iterLastAccessed, iter);
             }
           }
         }
@@ -129,7 +128,7 @@ namespace analyser {
 
     for (const auto& point : points) {
       if (point.isWrite || isWrite) {
-        reportIndependentDependence(point.pc, pc, point.isWrite, isWrite, iter);
+        results->addIndependentDependence(point.pc, pc, point.isWrite, isWrite, iter);
       }
     }
 

@@ -13,10 +13,10 @@ namespace analyser {
   class PointLoop : public Loop {
   public:
     // Construct a top level loop.
-    PointLoop();
+    PointLoop(bool detailedResults = false);
 
     // Construct a nested loop by providing a pointer to its parent loop.
-    explicit PointLoop(PointLoop* parent);
+    explicit PointLoop(PointLoop* parent, bool detailedResults = false);
 
   protected:
     using PointTableT = std::map<AddrT, std::vector<Point>>;
