@@ -29,7 +29,7 @@ using MemEventT = std::pair<PcT, AddrT>;
 
 int eventDispatch(Bufs<event_t>& eventBufs, Bufs<MemEventT>& memEventBufs);
 void eventHandler(Buf<event_t>& eventBuf, Buf<MemEventT>& memEventBuf);
-int sd3(bool detailedResults);
+int sd3(bool detailedResults, bool useStrides);
 
 int eventDispatch(Bufs<event_t>& eventBufs, Bufs<MemEventT>& memEventBufs) {
   uint64_t pc, addr;
@@ -143,11 +143,11 @@ void eventHandler(Buf<event_t>& eventBuf, Buf<MemEventT>& memEventBuf) {
   }
 }
 
-int sd3(bool detailedResults) {
+int sd3(bool detailedResults, bool useStrides) {
   uint64_t pc, addr;
   ssize_t num;
   event_t event;
-  std::stack<PointLoop> loopStack;
+  std::stack<std::unique_ptr<Loop>> loopStack;
   std::array<char, BUFLEN> buf;
   std::unique_ptr<DependenceResults> results(detailedResults
     ? std::unique_ptr<DependenceResults>{ std::make_unique<DetailedDependenceResults>() }
@@ -165,21 +165,29 @@ int sd3(bool detailedResults) {
       switch (event) {
         case LOOP_ENTRY:
           if (loopStack.empty()) {
-            loopStack.emplace(detailedResults); // Top level loop
+            auto ptr = useStrides
+              ? std::make_unique<StrideLoop>(detailedResults)
+              : std::make_unique<PointLoop>(detailedResults);
+            loopStack.push(std::move(ptr)); // Top level loop
           } else {
-            loopStack.emplace(&loopStack.top(), detailedResults); // Nested loop
+            auto ptr = useStrides
+              ? std::make_unique<StrideLoop>(static_cast<StrideLoop*>(loopStack.top().get()),
+                                             detailedResults)
+              : std::make_unique<PointLoop>(static_cast<PointLoop*>(loopStack.top().get()),
+                                            detailedResults);
+            loopStack.push(std::move(ptr)); // Nested loop
           }
           break;
 
         case LOOP_ITER:
           if (!loopStack.empty()) {
-            loopStack.top().iterate();
+            loopStack.top()->iterate();
           }
           break;
 
         case LOOP_EXIT:
           if (!loopStack.empty()) {
-            results->merge(loopStack.top().terminate());
+            results->merge(loopStack.top()->terminate());
             loopStack.pop();
           }
           break;
@@ -214,7 +222,7 @@ int sd3(bool detailedResults) {
           it += sizeof(addr);
 
           if (!loopStack.empty()) {
-            loopStack.top().memoryRef(pc, addr, event == STORE);
+            loopStack.top()->memoryRef(pc, addr, event == STORE);
           }
           break;
 
@@ -297,7 +305,7 @@ int main(int argc, const char** argv) {
     }
 
   } else {
-    res = sd3(detailedResults);
+    res = sd3(detailedResults, useStrides);
   }
 
 #ifdef BENCHMARK
