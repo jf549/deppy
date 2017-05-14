@@ -28,7 +28,8 @@ template<typename T> using Bufs = std::vector<Buf<T>>;
 using MemEventT = std::pair<PcT, AddrT>;
 
 int eventDispatch(Bufs<event_t>& eventBufs, Bufs<MemEventT>& memEventBufs);
-void eventHandler(Buf<event_t>& eventBuf, Buf<MemEventT>& memEventBuf);
+void eventHandler(Buf<event_t>& eventBuf, Buf<MemEventT>& memEventBuf, bool detailedResults,
+                  bool useStrides);
 int sd3(bool detailedResults, bool useStrides);
 
 int eventDispatch(Bufs<event_t>& eventBufs, Bufs<MemEventT>& memEventBufs) {
@@ -97,11 +98,15 @@ int eventDispatch(Bufs<event_t>& eventBufs, Bufs<MemEventT>& memEventBufs) {
   return 0;
 }
 
-void eventHandler(Buf<event_t>& eventBuf, Buf<MemEventT>& memEventBuf) {
+void eventHandler(Buf<event_t>& eventBuf, Buf<MemEventT>& memEventBuf, bool detailedResults,
+                  bool useStrides) {
   PcT pc;
   AddrT addr;
   event_t event;
-  std::stack<PointLoop> loopStack;
+  std::stack<std::unique_ptr<Loop>> loopStack;
+  std::unique_ptr<DependenceResults> results(detailedResults
+    ? std::unique_ptr<DependenceResults>{ std::make_unique<DetailedDependenceResults>() }
+    : std::unique_ptr<DependenceResults>{ std::make_unique<BasicDependenceResults>() } );
 
   while (true) {
     event = eventBuf.consume();
@@ -109,21 +114,29 @@ void eventHandler(Buf<event_t>& eventBuf, Buf<MemEventT>& memEventBuf) {
     switch (event) {
       case LOOP_ENTRY:
         if (loopStack.empty()) {
-          loopStack.emplace(); // Top level loop
+          auto ptr = useStrides
+            ? std::make_unique<StrideLoop>(detailedResults)
+            : std::make_unique<PointLoop>(detailedResults);
+          loopStack.push(std::move(ptr)); // Top level loop
         } else {
-          loopStack.emplace(&loopStack.top()); // Nested loop
+          auto ptr = useStrides
+            ? std::make_unique<StrideLoop>(static_cast<StrideLoop*>(loopStack.top().get()),
+                                           detailedResults)
+            : std::make_unique<PointLoop>(static_cast<PointLoop*>(loopStack.top().get()),
+                                          detailedResults);
+          loopStack.push(std::move(ptr)); // Nested loop
         }
         break;
 
       case LOOP_ITER:
         if (!loopStack.empty()) {
-          loopStack.top().iterate();
+          loopStack.top()->iterate();
         }
         break;
 
       case LOOP_EXIT:
         if (!loopStack.empty()) {
-          loopStack.top().terminate();
+          results->merge(loopStack.top()->terminate());
           loopStack.pop();
         }
         break;
@@ -133,11 +146,12 @@ void eventHandler(Buf<event_t>& eventBuf, Buf<MemEventT>& memEventBuf) {
         std::tie(pc, addr) = memEventBuf.consume();
 
         if (!loopStack.empty()) {
-          loopStack.top().memoryRef(pc, addr, event == STORE);
+          loopStack.top()->memoryRef(pc, addr, event == STORE);
         }
         break;
 
       case SENTINAL:
+        results->print();
         return;
     }
   }
@@ -291,7 +305,8 @@ int main(int argc, const char** argv) {
     std::vector<std::thread> threads;
 
     for (unsigned i = 0; i < NUM_THREADS; ++i) {
-      threads.emplace_back(eventHandler, std::ref(eventBufs[i]), std::ref(memEventBufs[i]));
+      threads.emplace_back(eventHandler, std::ref(eventBufs[i]), std::ref(memEventBufs[i]),
+                           detailedResults, useStrides);
     }
 
     res = eventDispatch(eventBufs, memEventBufs);
