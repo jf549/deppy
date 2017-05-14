@@ -1,11 +1,15 @@
-#include "extra.h"
-
 int main(void) {
-  int x = 0, y = 0;
+  int x = 3;
+  char y = 2;
+  x = x + 1;
+  y = y + 4;
 
-  for (int i = 0; i < 5; ++i) {
-    for (int j = 0; j < 3; ++j) {
-      x = f(y + i + j);
+  for (int i = 0; i < 6; ++i) {
+    y = y + 1;
+    for (int j = 0; j < 6; ++j) {
+      x = x + 1;
     }
   }
+
+  return 0;
 }
