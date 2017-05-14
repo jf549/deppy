@@ -18,7 +18,6 @@
 #endif
 
 #define BUFLEN (32 * BUFSIZ)
-#define USE_STRIDES 0
 
 static unsigned NUM_THREADS = 1;
 
@@ -27,15 +26,10 @@ using namespace analyser;
 template<typename T> using Buf = lib::BoundedBuffer<T>;
 template<typename T> using Bufs = std::vector<Buf<T>>;
 using MemEventT = std::pair<PcT, AddrT>;
-using LoopT = std::conditional_t<USE_STRIDES, StrideLoop, PointLoop>;
 
 int eventDispatch(Bufs<event_t>& eventBufs, Bufs<MemEventT>& memEventBufs);
-
-template<typename T>
 void eventHandler(Buf<event_t>& eventBuf, Buf<MemEventT>& memEventBuf);
-
-template<typename T>
-int sd3(bool detailedResults = false);
+int sd3(bool detailedResults);
 
 int eventDispatch(Bufs<event_t>& eventBufs, Bufs<MemEventT>& memEventBufs) {
   uint64_t pc, addr;
@@ -103,12 +97,11 @@ int eventDispatch(Bufs<event_t>& eventBufs, Bufs<MemEventT>& memEventBufs) {
   return 0;
 }
 
-template<typename T>
 void eventHandler(Buf<event_t>& eventBuf, Buf<MemEventT>& memEventBuf) {
   PcT pc;
   AddrT addr;
   event_t event;
-  std::stack<T> loopStack;
+  std::stack<PointLoop> loopStack;
 
   while (true) {
     event = eventBuf.consume();
@@ -150,12 +143,11 @@ void eventHandler(Buf<event_t>& eventBuf, Buf<MemEventT>& memEventBuf) {
   }
 }
 
-template<typename T>
 int sd3(bool detailedResults) {
   uint64_t pc, addr;
   ssize_t num;
   event_t event;
-  std::stack<T> loopStack;
+  std::stack<PointLoop> loopStack;
   std::array<char, BUFLEN> buf;
   std::unique_ptr<DependenceResults> results(detailedResults
     ? std::unique_ptr<DependenceResults>{ std::make_unique<DetailedDependenceResults>() }
@@ -282,7 +274,7 @@ int main(int argc, const char** argv) {
     NUM_THREADS = vm["threads"].as<unsigned>();
   }
 
-  std::cerr << (USE_STRIDES ? "Compressing memory access\n" : "Not compressesing memory access\n");
+  std::cerr << (useStrides ? "Compressing memory access\n" : "Not compressesing memory access\n");
   std::cerr << "Running with " << NUM_THREADS << " thread" << (NUM_THREADS > 1 ? "s\n" : "\n");
 
   if (NUM_THREADS > 1) {
@@ -291,7 +283,7 @@ int main(int argc, const char** argv) {
     std::vector<std::thread> threads;
 
     for (unsigned i = 0; i < NUM_THREADS; ++i) {
-      threads.emplace_back(eventHandler<LoopT>, std::ref(eventBufs[i]), std::ref(memEventBufs[i]));
+      threads.emplace_back(eventHandler, std::ref(eventBufs[i]), std::ref(memEventBufs[i]));
     }
 
     res = eventDispatch(eventBufs, memEventBufs);
@@ -305,7 +297,7 @@ int main(int argc, const char** argv) {
     }
 
   } else {
-    res = sd3<LoopT>(detailedResults);
+    res = sd3(detailedResults);
   }
 
 #ifdef BENCHMARK
