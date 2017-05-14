@@ -5,10 +5,10 @@
 #include "Stride.h"
 #include "StrideDetector.h"
 
+#include <ext/intervaltree/IntervalTree.h>
+
 #include <list>
 #include <map>
-
-#include <ext/intervaltree/IntervalTree.h>
 
 namespace analyser {
 

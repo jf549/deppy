@@ -4,14 +4,13 @@
 
 #include <boost/program_options.hpp>
 
-#include <unistd.h>
 #include <array>
 #include <future>
-#include <iostream>
 #include <iomanip>
+#include <iostream>
 #include <sstream>
 #include <stack>
-#include <thread>
+#include <unistd.h>
 
 #ifdef BENCHMARK
 #include <chrono>
