@@ -2,6 +2,8 @@
 #include <lib/BoundedBuffer.hpp>
 #include <lib/event.h>
 
+#include <boost/program_options.hpp>
+
 #include <unistd.h>
 #include <array>
 #include <iostream>
@@ -242,14 +244,46 @@ int main(int argc, const char** argv) {
 #endif
 
   int res = 0;
+  bool useStrides = false;
+  bool detailedResults = false;
 
-  if (argc > 1) {
-    std::istringstream iss(argv[1]);
-    iss >> NUM_THREADS;
+  boost::program_options::options_description desc("Options");
+  desc.add_options()
+    ("help,h", "Print help message")
+    ("compress,c", "Enable compression")
+    ("detail,d", "Print detailed dependence information")
+    ("threads,t", boost::program_options::value<unsigned>(), "Set number of threads");
+
+  boost::program_options::variables_map vm;
+
+  try {
+    boost::program_options::store(boost::program_options::parse_command_line(argc, argv, desc), vm);
+  } catch (boost::program_options::unknown_option&) {
+    std::cout << desc;
+    return 1;
   }
 
-  std::cerr << "Running with " << NUM_THREADS << " threads\n";
+  boost::program_options::notify(vm);
+
+  if (vm.count("help")) {
+    std::cout << desc;
+    return 1;
+  }
+
+  if (vm.count("compress")) {
+    useStrides = true;
+  }
+
+  if (vm.count("detail")) {
+    detailedResults = true;
+  }
+
+  if (vm.count("threads")) {
+    NUM_THREADS = vm["threads"].as<unsigned>();
+  }
+
   std::cerr << (USE_STRIDES ? "Compressing memory access\n" : "Not compressesing memory access\n");
+  std::cerr << "Running with " << NUM_THREADS << " thread" << (NUM_THREADS > 1 ? "s\n" : "\n");
 
   if (NUM_THREADS > 1) {
     Bufs<event_t> eventBufs(NUM_THREADS);
@@ -271,7 +305,7 @@ int main(int argc, const char** argv) {
     }
 
   } else {
-    res = sd3<LoopT>();
+    res = sd3<LoopT>(detailedResults);
   }
 
 #ifdef BENCHMARK
