@@ -6,6 +6,7 @@
 
 #include <unistd.h>
 #include <array>
+#include <future>
 #include <iostream>
 #include <iomanip>
 #include <sstream>
@@ -28,8 +29,8 @@ template<typename T> using Bufs = std::vector<Buf<T>>;
 using MemEventT = std::pair<PcT, AddrT>;
 
 int eventDispatch(Bufs<event_t>& eventBufs, Bufs<MemEventT>& memEventBufs);
-void eventHandler(Buf<event_t>& eventBuf, Buf<MemEventT>& memEventBuf, bool detailedResults,
-                  bool useStrides);
+std::unique_ptr<DependenceResults> eventHandler(Buf<event_t>& eventBuf, Buf<MemEventT>& memEventBuf,
+                                                bool detailedResults, bool useStrides);
 int sd3(bool detailedResults, bool useStrides);
 
 int eventDispatch(Bufs<event_t>& eventBufs, Bufs<MemEventT>& memEventBufs) {
@@ -98,8 +99,8 @@ int eventDispatch(Bufs<event_t>& eventBufs, Bufs<MemEventT>& memEventBufs) {
   return 0;
 }
 
-void eventHandler(Buf<event_t>& eventBuf, Buf<MemEventT>& memEventBuf, bool detailedResults,
-                  bool useStrides) {
+std::unique_ptr<DependenceResults> eventHandler(Buf<event_t>& eventBuf, Buf<MemEventT>& memEventBuf,
+                                                bool detailedResults, bool useStrides) {
   PcT pc;
   AddrT addr;
   event_t event;
@@ -152,8 +153,7 @@ void eventHandler(Buf<event_t>& eventBuf, Buf<MemEventT>& memEventBuf, bool deta
         break;
 
       case SENTINAL:
-        results->print();
-        return;
+        return results;
     }
   }
 }
@@ -304,11 +304,14 @@ int main(int argc, const char** argv) {
   if (NUM_THREADS > 1) {
     Bufs<event_t> eventBufs(NUM_THREADS);
     Bufs<MemEventT> memEventBufs(NUM_THREADS);
-    std::vector<std::thread> threads;
+    std::unique_ptr<DependenceResults> results(detailedResults
+      ? std::unique_ptr<DependenceResults>{ std::make_unique<DetailedDependenceResults>() }
+      : std::unique_ptr<DependenceResults>{ std::make_unique<BasicDependenceResults>() } );
+    std::vector<std::future<std::unique_ptr<DependenceResults>>> futs;
 
     for (unsigned i = 0; i < NUM_THREADS; ++i) {
-      threads.emplace_back(eventHandler, std::ref(eventBufs[i]), std::ref(memEventBufs[i]),
-                           detailedResults, useStrides);
+      futs.push_back(std::async(std::launch::async, eventHandler, std::ref(eventBufs[i]),
+                                std::ref(memEventBufs[i]), detailedResults, useStrides));
     }
 
     res = eventDispatch(eventBufs, memEventBufs);
@@ -317,9 +320,11 @@ int main(int argc, const char** argv) {
       buf.produce(SENTINAL);
     }
 
-    for (auto& t : threads) {
-      t.join();
+    for (auto& fut : futs) {
+      results->merge(fut.get());
     }
+
+    results->print();
 
   } else {
     res = sd3(detailedResults, useStrides);
