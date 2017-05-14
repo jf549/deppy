@@ -23,7 +23,7 @@ namespace analyser {
     }
 
     try {
-      auto res = getDebugInfo(srcPc);
+      auto res = getDebugInfo(sinkPc);
       std::cout << ") --> (" << res.filename
                 << ", line: " << res.lineNum
                 << ", col: " << res.colNum;
