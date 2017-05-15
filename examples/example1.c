@@ -1,7 +1,7 @@
 int main(void) {
-  char c;
+  int i, c;
 
-  for (int i = 0; i < 5; ++i) {
+  for (i = 0; i < 5; ++i) {
     c = 3;
   }
 
