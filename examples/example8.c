@@ -6,7 +6,7 @@ void f(long *l, int offset) {
 }
 
 int main(void) {
-  long *l = malloc(10 * sizeof(l));
+  long *l = malloc(10 * sizeof(long));
   int i;
 
   for (i = 0; i < 20; ++i) {

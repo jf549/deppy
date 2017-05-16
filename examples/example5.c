@@ -2,7 +2,7 @@
 #include <stdlib.h>
 
 int main(void) {
-  int *a = malloc(10 * sizeof(a));
+  int *a = malloc(10 * sizeof(int));
   int *ptr = a, *end = a + 10;
 
   *ptr++ = 0;
