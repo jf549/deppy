@@ -1,11 +1,10 @@
-#include "extra.h"
-
 int main(void) {
-  int x = 0, y = 0;
+  int i, j, x, a[30] = { 0 };
 
-  for (int i = 0; i < 5; ++i) {
-    for (int j = 0; j < 3; ++j) {
-      x = f(y + i + j);
+  for (i = 0; i < 8; ++i) {
+    a[2*i + 10] = 3;
+    for (j = 0; j < 7; ++j) {
+      x = a[3*j + 11];
     }
   }
 }
