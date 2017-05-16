@@ -1,13 +1,11 @@
+// An example demonstrating nested loops with fixed-address accesses.
 int main(void) {
-  int x = 3;
-  char y = 2;
-  x = x + 1;
-  y = y + 4;
+  int i, j, x = 0, y = 0;
 
-  for (int i = 0; i < 6; ++i) {
-    y = y + 1;
-    for (int j = 0; j < 6; ++j) {
-      x = x + 1;
+  for (i = 0; i < 10; ++i) {
+    y = y + i;
+    for (j = 0; j < 10; ++j) {
+      x = y + j;
     }
   }
 
