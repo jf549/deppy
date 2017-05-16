@@ -1,3 +1,4 @@
+// An example with nested stride accesses.
 int main(void) {
   int i, j, x, a[30] = { 0 };
 
