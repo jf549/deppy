@@ -6,7 +6,7 @@ int main(void) {
 
   for (i = 0; i < 1000; ++i) {
     p = malloc(sizeof(int));
-    *p = 3;
+    *p = 3; // False dependence reported here
     free(p);
   }
 
