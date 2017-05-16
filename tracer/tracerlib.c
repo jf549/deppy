@@ -82,7 +82,7 @@ void memoryEvent(event_t event, void *addr, uint64_t pc) {
 
   serialiseEvent(event);
   serialiseUint64(pc);
-  serialiseUint64((uint64_t) addr);
+  serialiseUint64(((uint64_t) addr) | 0x3);
 
   if (ptr - buf > BUFLEN - 17) {
     flushBuf();
