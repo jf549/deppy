@@ -13,10 +13,19 @@ namespace analyser {
   void PointLoop::propagate(const PointLoop& childLoop) {
     for (const auto& pair : childLoop.historyPointTable) {
       const auto addr = pair.first;
+      const auto& childPoints = pair.second;
+      auto& points = pendingPointTable[addr];
+
+      for (const auto& childPoint : childPoints) {
+        for (const auto& point : points) {
+          if (point.isWrite || childPoint.isWrite) {
+            results->addIndependentDependence(point.pc, childPoint.pc, point.isWrite,
+                                              childPoint.isWrite, iter);
+          }
+        }
+      }
 
       if (!killedAddrs.count(addr)) {
-        const auto& childPoints = pair.second;
-        auto& points = pendingPointTable[addr];
         points.insert(cend(points), cbegin(childPoints), cend(childPoints));
       }
     }
