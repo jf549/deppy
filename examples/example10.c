@@ -1,6 +1,5 @@
 // An example demonstrating address granularity.
 #include <stdlib.h>
-#include <stdio.h>
 
 int main(void) {
   int *ip = malloc(sizeof(int));
