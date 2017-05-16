@@ -8,4 +8,6 @@ int main(void) {
       x = a[3*j + 11];
     }
   }
+
+  return 0;
 }
