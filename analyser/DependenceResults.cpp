@@ -35,8 +35,10 @@ namespace analyser {
     std::cout << ")\n";
   }
 
+
   DependenceResults::DependenceResults() = default;
   DependenceResults::~DependenceResults() = default;
+
 
   void BasicDependenceResults::merge(std::unique_ptr<DependenceResults> other) {
     if (auto ptr = dynamic_cast<BasicDependenceResults*>(other.get())) {
@@ -72,6 +74,7 @@ namespace analyser {
     }
   }
 
+
   void DetailedDependenceResults::merge(std::unique_ptr<DependenceResults> other) {
     if (auto ptr = dynamic_cast<DetailedDependenceResults*>(other.get())) {
       carriedDependences.insert(ptr->carriedDependences.cbegin(), ptr->carriedDependences.cend());
@@ -98,14 +101,14 @@ namespace analyser {
 
     for (const auto& kv : carriedDependences) {
       analyser::print(kv.first);
-      std::cout << "  Iter: " << kv.second.first << " to " << kv.second.second << '\n';
+      std::cout << "    Iteration: " << kv.second.first << " to " << kv.second.second << '\n';
     }
 
     std::cout << "\nLoop-independent dependences:\n";
 
     for (const auto& kv : independentDependences) {
       analyser::print(kv.first);
-      std::cout << "  Iter: " << kv.second << '\n';
+      std::cout << "    Iteration: " << kv.second << '\n';
     }
   }
 
