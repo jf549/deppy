@@ -5,6 +5,7 @@
 
 #include <array>
 #include <future>
+#include <vector>
 
 TEST_CASE("Bounded buffer can be accessed sequentially", "[boundedbuf]") {
   lib::BoundedBuffer<event_t> buf;
