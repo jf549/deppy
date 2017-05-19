@@ -1,5 +1,6 @@
 #include <analyser/Stride.h>
 #include <analyser/StrideDetector.h>
+#include <analyser/StrideLoop.h>
 
 #include <catch.hpp>
 
@@ -114,4 +115,54 @@ TEST_CASE("Strides are detected", "[stridedetect]") {
   REQUIRE(sd.addAddress(0) == false);
   REQUIRE(sd.addAddress(0) == false);
   REQUIRE(sd.addAddress(3) == false);
+}
+
+TEST_CASE("Strides distances are computed", "[stridedist]") {
+  analyser::StrideDetector sd;
+
+  // First stride
+  sd.addAddress(10);
+  sd.addAddress(14);
+  sd.addAddress(18);
+  sd.addAddress(14);
+  sd.addAddress(18);
+  sd.addAddress(22);
+
+  REQUIRE(sd.getStride() == 4);
+
+  // Second stride, fixed address
+  sd.addAddress(50);
+  sd.addAddress(50);
+  sd.addAddress(50);
+  sd.addAddress(50);
+  sd.addAddress(50);
+  sd.addAddress(50);
+
+  REQUIRE(sd.getStride() == 0);
+
+  // Third stride, decreasing
+  sd.addAddress(30);
+  sd.addAddress(27);
+  sd.addAddress(24);
+  sd.addAddress(21);
+  sd.addAddress(18);
+  sd.addAddress(15);
+  sd.addAddress(12);
+
+  REQUIRE(sd.getStride() == 3);
+}
+
+TEST_CASE("Strides are merged", "[stridemerge]") {
+  analyser::Stride s0{ 20, 2, 32, 0, true };
+  analyser::Stride s1{ 21, 3, 39, 1, true };
+  analyser::Stride s2{ 34, 2, 98, 2, true };
+
+  REQUIRE(s0.merge(s1) == false);
+  REQUIRE(s1.merge(s2) == false);
+
+  REQUIRE(s0.merge(s2) == true);
+
+  REQUIRE(s0.base == 20);
+  REQUIRE(s0.limit == 98);
+  REQUIRE(s0.iterLastAccessed == 2);
 }
